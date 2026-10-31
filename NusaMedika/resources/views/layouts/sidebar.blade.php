@@ -71,6 +71,10 @@
                                             $subMenusList = $menu->subMenus ?? $menu->sub_menus ?? [];
                                         @endphp
                                         @foreach($subMenusList as $subMenu)
+                                            @continue(in_array($subMenu->file_sub_menu, [
+                                                'Billing/Transaksi/BillingPasien/billing_pasien',
+                                                'Billing/Transaksi/Kasir/kasir',
+                                            ], true))
                                             <a href="{{ \App\Providers\SubMenuRouteServiceProvider::url($subMenu->file_sub_menu) }}" class="block px-3 py-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors submenu-item border-b border-slate-800/20 last:border-b-0">
                                                 {{ $subMenu->nama_sub_menu }}
                                             </a>

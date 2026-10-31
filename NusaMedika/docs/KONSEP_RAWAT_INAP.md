@@ -1,5 +1,7 @@
 # KONSEP MODUL RAWAT INAP (BED MANAGEMENT + MASTER BED)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 > Status: **Rancangan / Konsep** — belum diimplementasikan.
 > Dokumen ini menjadi acuan implementasi. Semua nama (folder, route, sub_menu, sub_menu_id, kolom baru) bersifat keputusan awal dan harus disepakati sebelum kode dibuat. Keputusan user yang sudah dikunci: (1) status **Persiapan Pulang** = toggle manual di Bed Management; (2) **Daftar Rawat Inap dilengkapi store** sebagai sumber alur masuk ranap & waitlist; (3) **seed bed contoh** di seeder.
 

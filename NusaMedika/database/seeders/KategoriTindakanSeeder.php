@@ -17,6 +17,13 @@ class KategoriTindakanSeeder extends Seeder
             'Laboratorium',
             'Radiologi',
             'Lainnya',
+            'Administrasi',
+            'Kamar',
+            'Makanan',
+            'Visite',
+            'Konsultasi',
+            'Emergency',
+            'MCU',
         ];
 
         foreach ($kategoris as $nama) {

@@ -242,11 +242,11 @@ Ringkasan objek database:
 | Master & referensi | `referensi_bagian`, `bagian`, `profesi`, `jabatan`, `status_kepegawaian`, `pegawai`, `kelas_ruang`, `nasabah`, `icd`, `jadwal_dokter`, `bed` |
 | Menu & akses | `modul`, `menu`, `sub_menu`, `users`, `user_akses` |
 | Wilayah | `provinsi`, `kabupaten`, `kecamatan`, `kelurahan` |
-| Pasien & registrasi | `pasien`, `pasien_nasabah`, `registrasi`, `registrasi_detail`, `registrasi_urut`, `bill_temp`, `rujukan_sep`, `penanggung_rawat`, `diagnosa_rawat` |
+| Pasien & registrasi | `pasien`, `pasien_nasabah`, `registrasi`, `registrasi_detail`, `registrasi_urut`, `rujukan_sep`, `penanggung_rawat`, `diagnosa_rawat` |
 | EMR (tanpa model, via `DB::table`) | `emr`, `emr_detail`, `form`, `objek`, `objek_form_control`, `dashboard_menu`, `dashboard_menu_sub`, `dashboard_menu_sub_extra`, `akses_ehr` |
 | View | `header_ehr` |
 
-**28 model Eloquent** di `app/Models/` (`Modul`, `Menu`, `SubMenu`, `User`, `UserAkses`, `Profesi`, `Jabatan`, `StatusKepegawaian`, `Pegawai`, `Bagian`, `ReferensiBagian`, `Provinsi`, `Kabupaten`, `Kecamatan`, `Kelurahan`, `Nasabah`, `KelasRuang`, `ICD`, `JadwalDokter`, `Pasien`, `PasienNasabah`, `Registrasi`, `RegistrasiDetail`, `RegistrasiUrut`, `BillTemp`, `RujukanSep`, `PenanggungRawat`, `DiagnosaRawat`).
+**27 model Eloquent** di `app/Models/` (`Modul`, `Menu`, `SubMenu`, `User`, `UserAkses`, `Profesi`, `Jabatan`, `StatusKepegawaian`, `Pegawai`, `Bagian`, `ReferensiBagian`, `Provinsi`, `Kabupaten`, `Kecamatan`, `Kelurahan`, `Nasabah`, `KelasRuang`, `ICD`, `JadwalDokter`, `Pasien`, `PasienNasabah`, `Registrasi`, `RegistrasiDetail`, `RegistrasiUrut`, `RujukanSep`, `PenanggungRawat`, `DiagnosaRawat`).
 
 > **Catatan:** `migrate:fresh` akan **DROP SEMUA tabel** di database yang dikonfigurasi (termasuk tabel legacy yang tidak punya migrasi) lalu recreate hanya 39 objek di atas. Proses ini destruktif dan irreversibel. Jangan jalankan terhadap database produksi/berisi data.
 

@@ -17,6 +17,7 @@ class Registrasi extends Model
         'tgl_masuk',
         'jenis_rawat',
         'pasien_nasabah_id',
+        'referensi_registrasi_id',
         'pasien_nasabah_id_2',
         'pasien_nasabah_id_3',
         'status_batal',
@@ -32,6 +33,22 @@ class Registrasi extends Model
     public function registrasiDetails()
     {
         return $this->hasMany(RegistrasiDetail::class, 'registrasi_id', 'registrasi_id');
+    }
+
+    public function billings()
+    {
+        return $this->hasMany(Billing::class, 'registrasi_id', 'registrasi_id')
+            ->where(function ($q) {
+                $q->whereNull('status_batal')->orWhere('status_batal', 0);
+            });
+    }
+
+    public function billing()
+    {
+        return $this->hasOne(Billing::class, 'registrasi_id', 'registrasi_id')
+            ->where(function ($q) {
+                $q->whereNull('status_batal')->orWhere('status_batal', 0);
+            });
     }
 
     public function rujukanSep()

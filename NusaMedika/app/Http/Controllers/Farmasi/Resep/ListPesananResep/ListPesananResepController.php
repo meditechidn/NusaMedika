@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Farmasi\Resep\ListPesananResep;
 
+use App\Helpers\BillingHelper;
 use App\Helpers\StockHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Bagian;
@@ -234,6 +235,8 @@ class ListPesananResepController extends Controller
                         'tgl_expired' => $stock->tgl_expired,
                     ]
                 );
+
+                BillingHelper::syncResepDispense((int) $detail->peresepan_obat_detail_id);
 
                 $dispensedApaApa = true;
             }

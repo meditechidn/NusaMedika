@@ -47,7 +47,7 @@ class ListPasienMedicalCheckupController extends Controller
                 ->join('bagian as b', 'b.bagian_id', '=', 'rd.bagian_id')
                 ->join('pasien_nasabah as pn', 'pn.pasien_nasabah_id', '=', 'r.pasien_nasabah_id')
                 ->join('nasabah as n', 'n.nasabah_id', '=', 'pn.nasabah_id')
-                ->join('bill_temp as bt', 'bt.registrasi_detail_id', '=', 'rd.registrasi_detail_id')
+                ->leftJoin('billing as bt', 'bt.registrasi_id', '=', 'r.registrasi_id')
                 ->join('registrasi_urut as ru', 'ru.registrasi_detail_id', '=', 'rd.registrasi_detail_id')
                 ->join('penanggung_rawat as pr', 'pr.registrasi_id', '=', 'r.registrasi_id')
                 ->leftJoin('suket_mcu as sk', 'sk.suket_mcu_id', '=', 'rd.suket_mcu_id')

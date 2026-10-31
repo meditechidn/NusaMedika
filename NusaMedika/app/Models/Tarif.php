@@ -6,18 +6,28 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TindakanHarga extends Model
+/**
+ * Tarif tindakan per kelas perawatan.
+ *
+ * Satu baris per (tindakan, kelas). `kelas_ruang_id` NULL = tarif default yang
+ * dipakai bila kelas spesifik belum diisi. Kelas perawatan (Kelas 1/2/3/VIP/
+ * VVIP) berasal dari master `kelas_ruang`, bukan kolom terpisah di sini.
+ */
+class Tarif extends Model
 {
-    protected $table = 'tindakan_harga';
+    protected $table = 'tarif';
 
-    protected $primaryKey = 'tindakan_harga_id';
+    protected $primaryKey = 'tarif_id';
 
     public $timestamps = false;
 
-    protected $fillable = [
-        'tindakan_id',
-        'kelas_ruang_id',
-        'tarif',
+    protected $guarded = [];
+
+    protected $casts = [
+        'tarif' => 'float',
+        'jasa_sarana' => 'float',
+        'jasa_medis' => 'float',
+        'bhp' => 'float',
     ];
 
     public function scopeAktif(Builder $query): Builder

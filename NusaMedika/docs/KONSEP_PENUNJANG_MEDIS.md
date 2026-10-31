@@ -1,5 +1,7 @@
 # KONSEP MODUL PENUNJANG MEDIS (Laboratorium & Radiologi)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 > Status: **Rancangan / Konsep** — belum diimplementasikan.
 > Dokumen ini menjadi acuan implementasi. Semua nama (tabel, folder, route, slug) bersifat keputusan awal dan harus disepakati sebelum migrasi dibuat.
 

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Administrator\ManajemenEMR\KatalogFormBlanko\KatalogFormBlankoController as AdminKatalogFormBlankoController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Billing\Transaksi\BillingPasien\BillingPasienController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\EMR\DynamicFormController;
 use App\Http\Controllers\EMR\EmrDashboard\EmrDashboardController;
@@ -140,6 +141,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/pesan/{percakapan}/kirim', [PesanController::class, 'kirim'])->whereNumber('percakapan')->name('pesan.kirim');
     Route::get('/forum/{topik}', [ForumController::class, 'show'])->whereNumber('topik')->name('forum.show');
     Route::post('/forum/{topik}/balas', [ForumController::class, 'balas'])->whereNumber('topik')->name('forum.balas');
+
+    // ============ ROUTE BILLING ============= #
+    // Aksi non-CRUD billing pasien: item, void, diskon, tutup/buka, cetak.
+    Route::get('/billing_pasien/harga', [BillingPasienController::class, 'harga'])->name('billing_pasien.harga');
+    Route::get('/billing_pasien/cetak-episode', [BillingPasienController::class, 'cetakEpisode'])->name('billing_pasien.cetak_episode');
+    Route::get('/billing_pasien/cetak-pasien', [BillingPasienController::class, 'cetakPasien'])->name('billing_pasien.cetak_pasien');
+    Route::post('/billing_pasien/tutup-semua', [BillingPasienController::class, 'tutupSemua'])->name('billing_pasien.tutup_semua');
+    Route::post('/billing_pasien/buka-semua', [BillingPasienController::class, 'bukaSemua'])->name('billing_pasien.buka_semua');
+    Route::post('/billing_pasien/{billing}/item', [BillingPasienController::class, 'store'])->whereNumber('billing')->name('billing_pasien.item');
+    Route::post('/billing_pasien/{billing}/item/{detail}/void', [BillingPasienController::class, 'voidItem'])->whereNumber('billing')->whereNumber('detail')->name('billing_pasien.void_item');
+    Route::post('/billing_pasien/{billing}/diskon', [BillingPasienController::class, 'diskon'])->whereNumber('billing')->name('billing_pasien.diskon');
+    Route::post('/billing_pasien/{billing}/tutup', [BillingPasienController::class, 'tutup'])->whereNumber('billing')->name('billing_pasien.tutup');
+    Route::post('/billing_pasien/{billing}/buka', [BillingPasienController::class, 'buka'])->whereNumber('billing')->name('billing_pasien.buka');
+    Route::post('/billing_pasien/{billing}/void', [BillingPasienController::class, 'void'])->whereNumber('billing')->name('billing_pasien.void');
+    Route::get('/billing_pasien/{billing}/cetak', [BillingPasienController::class, 'cetak'])->whereNumber('billing')->name('billing_pasien.cetak');
 
     // ============ ROUTE NOTIFIKASI (aksi lonceng navbar) ========== #
     // Non-CRUD & milik user sendiri: menutup notifikasi yang masuk.

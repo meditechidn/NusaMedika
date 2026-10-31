@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Registrasi\Pendaftaran\ListPelayananPasien;
 
+use App\Helpers\BillingHelper;
 use App\Http\Controllers\Controller;
-use App\Models\BillTemp;
 use App\Models\DiagnosaRawat;
 use App\Models\Pasien;
 use App\Models\PenanggungRawat;
@@ -36,13 +36,9 @@ class ListPelayananPasienController extends Controller
                             $sqq->whereNull('status_batal')->orWhere('status_batal', 0);
                         });
                     },
-                    'billTemp' => function ($sq) {
-                        $sq->where(function ($sqq) {
-                            $sqq->whereNull('status_batal')->orWhere('status_batal', 0);
-                        });
-                    },
                 ]);
             },
+            'billing',
             'rujukanSep',
             'pasienNasabah' => function ($q) {
                 $q->where(function ($sq) {
@@ -106,17 +102,7 @@ class ListPelayananPasienController extends Controller
                 $detail->mod_user_id = auth()->id();
                 $detail->save();
 
-                // Cancel bill_temp & registrasi_urut terkait
-                BillTemp::where('registrasi_detail_id', $detail->registrasi_detail_id)
-                    ->where(function ($q) {
-                        $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                    })
-                    ->update([
-                        'status_batal' => 1,
-                        'mod_time' => now(),
-                        'mod_user_id' => auth()->id(),
-                    ]);
-
+                // Cancel registrasi_urut terkait
                 RegistrasiUrut::where('registrasi_detail_id', $detail->registrasi_detail_id)
                     ->where(function ($q) {
                         $q->whereNull('status_batal')->orWhere('status_batal', 0);
@@ -148,6 +134,8 @@ class ListPelayananPasienController extends Controller
                     'mod_time' => now(),
                     'mod_user_id' => auth()->id(),
                 ]);
+
+            BillingHelper::voidRegistrasi((int) $registrasi->registrasi_id, 'Registrasi dibatalkan');
 
             DB::commit();
 

@@ -123,31 +123,11 @@ class PenunjangHelper
      */
     public static function tarif(int $tindakanId, ?int $kelasRuangId): array
     {
-        $harga = null;
-
-        if ($kelasRuangId) {
-            $harga = DB::table('tindakan_harga')
-                ->where('tindakan_id', $tindakanId)
-                ->where('kelas_ruang_id', $kelasRuangId)
-                ->where(function ($q) {
-                    $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                })
-                ->first();
-        }
-
-        if (! $harga) {
-            $harga = DB::table('tindakan_harga')
-                ->where('tindakan_id', $tindakanId)
-                ->whereNull('kelas_ruang_id')
-                ->where(function ($q) {
-                    $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                })
-                ->first();
-        }
+        $harga = TarifHelper::tindakan($tindakanId, $kelasRuangId);
 
         return [
-            'kelas_ruang_id' => $harga && $harga->kelas_ruang_id !== null ? (int) $harga->kelas_ruang_id : null,
-            'tarif' => (float) ($harga->tarif ?? 0),
+            'kelas_ruang_id' => $harga['kelas_ruang_id'],
+            'tarif' => $harga['tarif'],
         ];
     }
 
@@ -227,6 +207,7 @@ class PenunjangHelper
 
             // 3. Insert detail order dengan snapshot tarif.
             static::insertDetails($jenis, $detailTable, $detailFk, $orderId, $items, $hakKelasId);
+            BillingHelper::syncOrder($jenis, $orderId);
 
             return $orderId;
         });
@@ -264,6 +245,8 @@ class PenunjangHelper
                 'mod_user_id' => $user->user_id ?? null,
             ]);
 
+            BillingHelper::voidOrder($jenis, $orderId);
+
             DB::table($detailTable)
                 ->where($detailFk, $orderId)
                 ->update([
@@ -273,6 +256,7 @@ class PenunjangHelper
                 ]);
 
             static::insertDetails($jenis, $detailTable, $detailFk, $orderId, $items, $hakKelasId);
+            BillingHelper::syncOrder($jenis, $orderId);
         });
     }
 
@@ -421,6 +405,7 @@ class PenunjangHelper
             throw new \RuntimeException('Hanya order dengan status Menunggu yang dapat dibatalkan.');
         }
 
+        BillingHelper::voidOrder($jenis, $orderId);
         static::updateOrder($jenis, $orderId, ['status_order' => 3]);
     }
 

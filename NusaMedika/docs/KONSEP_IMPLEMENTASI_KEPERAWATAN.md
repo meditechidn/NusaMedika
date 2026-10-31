@@ -1,5 +1,7 @@
 # MASTER IMPLEMENTASI + FORM IMPLEMENTASI KEPERAWATAN (EMR)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 > Status: **Sudah diimplementasikan** — DB sudah di-migrate dan di-seed.
 > Dua bagian: (1) master katalog di Administrator, (2) form pencatatan di Dashboard Pasien.
 

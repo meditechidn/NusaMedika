@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class MasterTarifSeeder extends Seeder
 {
     /**
-     * Baseline Master Tarif (tabel `tindakan_harga`). Satu tarif per tindakan per
+     * Baseline Master Tarif (tabel `tarif`). Satu tarif per tindakan per
      * kelas perawatan + satu baris tarif default (kelas_ruang_id NULL) sebagai
      * fallback ketika kelas spesifik belum diisi.
      *
@@ -32,6 +32,9 @@ class MasterTarifSeeder extends Seeder
             ->where(function ($q) {
                 $q->where('tindakan.status_batal', '!=', 1)->orWhereNull('tindakan.status_batal');
             })
+            // Tarif kategori billing (administrasi/kamar/makanan/visite) dikelola
+            // di BillingSeeder dan Master Tarif (Administrator → Manajemen Master), bukan di baseline ini.
+            ->whereIn('kategori_tindakan.nama_kategori_tindakan', ['Laboratorium', 'Radiologi'])
             ->get(['tindakan.tindakan_id', 'kategori_tindakan.nama_kategori_tindakan']);
 
         foreach ($tindakan as $t) {
@@ -39,7 +42,7 @@ class MasterTarifSeeder extends Seeder
             $base = $isLab ? 50000 : 100000;
 
             // Baris default (fallback bila kelas spesifik belum diisi).
-            DB::table('tindakan_harga')->updateOrInsert(
+            DB::table('tarif')->updateOrInsert(
                 ['tindakan_id' => $t->tindakan_id, 'kelas_ruang_id' => null],
                 [
                     'tarif' => $base,
@@ -61,7 +64,7 @@ class MasterTarifSeeder extends Seeder
                     continue;
                 }
 
-                DB::table('tindakan_harga')->updateOrInsert(
+                DB::table('tarif')->updateOrInsert(
                     ['tindakan_id' => $t->tindakan_id, 'kelas_ruang_id' => $kelasId],
                     [
                         'tarif' => $tarif,

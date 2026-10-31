@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Schema;
  * data lamalama di-update, registrasi dummy sebelumnya di-soft-delete dulu.
  *
  * Catatan visibilitas list (join wajib, lihat controller masing-masing):
- *   - RJ  & IGD butuh: registrasi_detail + patient_nasabah + nasabah + bill_temp
+ *   - RJ  & IGD butuh: registrasi_detail + patient_nasabah + nasabah
  *     (RJ juga `registrasi_urut` + `penanggung_rawat`)
  *   - RI  butuh: `penanggung_rawat` + `bed.pasien_id_1` (tanpa ini tidak muncul)
  *   - semua list difilter `penanggung_rawat.rawat_user_id = user yang login`
@@ -263,7 +263,7 @@ class PasienDummySeeder extends Seeder
 
     /**
      * Soft-delete registrasi dummy sebelumnya milik pasien ini yang masuk HARI INI
-     * beserta detail, bill_temp, registrasi_urut, penanggung_rawat — dan kosongkan
+     * beserta detail, registrasi_urut, penanggung_rawat — dan kosongkan
      * bed yang sempat dipakai. Menjaga seeder tetap idempotent.
      */
     private function bersihkanRegistrasiDummy(int $pasienId, array $tanggal): void
@@ -293,10 +293,8 @@ class PasienDummySeeder extends Seeder
                 'mod_time' => $now,
             ]);
 
-        foreach (['bill_temp', 'registrasi_urut'] as $tabel) {
-            DB::table($tabel)->whereIn('registrasi_detail_id', $detailIds)
-                ->update(['status_batal' => 1, 'mod_time' => $now]);
-        }
+        DB::table('registrasi_urut')->whereIn('registrasi_detail_id', $detailIds)
+            ->update(['status_batal' => 1, 'mod_time' => $now]);
 
         DB::table('penanggung_rawat')->whereIn('registrasi_id', $registrasiIds)
             ->update(['status_batal' => 1, 'mod_time' => $now]);
@@ -337,9 +335,6 @@ class PasienDummySeeder extends Seeder
             'now' => $d['now'],
             'user_id' => $d['input_user_id'],
         ]);
-
-        // bill_temp (join wajib list RJ & IGD)
-        $this->insertBillTemp($detailId, $d);
 
         // registrasi_urut (join wajib list RJ — urutan antrian)
         if ($d['dokter_pegawai_id']) {
@@ -385,7 +380,7 @@ class PasienDummySeeder extends Seeder
             'user_id' => $d['input_user_id'],
         ]);
 
-        $detailId = $this->insertRegistrasiDetail([
+        $this->insertRegistrasiDetail([
             'registrasi_id' => $reg,
             'bagian_id' => $d['bagian_id'],
             'kelas_id' => $d['kelas_id'],
@@ -440,7 +435,7 @@ class PasienDummySeeder extends Seeder
             'user_id' => $d['input_user_id'],
         ]);
 
-        $detailId = $this->insertRegistrasiDetail([
+        $this->insertRegistrasiDetail([
             'registrasi_id' => $reg,
             'bagian_id' => $d['bagian_id'],
             'kelas_id' => $d['kelas_id'],
@@ -455,7 +450,6 @@ class PasienDummySeeder extends Seeder
             'user_id' => $d['input_user_id'],
         ]);
 
-        $this->insertBillTemp($detailId, $d);
         $this->insertPenanggungRawat($reg, $d);
     }
 
@@ -496,26 +490,6 @@ class PasienDummySeeder extends Seeder
             'input_time' => $d['now'],
             'input_user_id' => $d['user_id'],
         ], 'registrasi_detail_id');
-    }
-
-    private function insertBillTemp(int $registrasiDetailId, array $d): void
-    {
-        DB::table('bill_temp')->insert([
-            'registrasi_detail_id' => $registrasiDetailId,
-            'pasien_id' => $d['pasien_id'],
-            'bagian_id' => $d['bagian_id'],
-            'nasabah_id' => DB::table('pasien_nasabah')
-                ->where('pasien_nasabah_id', $d['pasien_nasabah_id'])
-                ->value('nasabah_id'),
-            'kelas_ruang_id' => $d['hak_kelas_id'],
-            'hak_kelas_ruang_id' => $d['kelas_id'],
-            'tgl_bill' => $d['now'],
-            'status_selesai' => 0,
-            'flag_tampil' => 1,
-            'status_batal' => 0,
-            'input_time' => $d['now'],
-            'input_user_id' => $d['input_user_id'],
-        ]);
     }
 
     private function insertPenanggungRawat(int $registrasiId, array $d): void

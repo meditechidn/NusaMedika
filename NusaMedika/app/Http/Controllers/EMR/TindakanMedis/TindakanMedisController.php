@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\EMR\TindakanMedis;
 
 use App\Helpers\AksesEhr;
+use App\Helpers\BillingHelper;
 use App\Helpers\EmrHelper;
 use App\Helpers\StockHelper;
 use App\Http\Controllers\Controller;
@@ -167,9 +168,10 @@ class TindakanMedisController extends Controller
             $v = $this->validated($request, $bagianId);
 
             DB::transaction(function () use ($request, $form_id, $registrasi_detail_id, $bagianId, $v) {
-                EmrHelper::insert((int) $form_id, $this->filteredData($request, (int) $form_id, $v['data']), (int) $registrasi_detail_id);
+                $emrId = EmrHelper::insert((int) $form_id, $this->filteredData($request, (int) $form_id, $v['data']), (int) $registrasi_detail_id);
 
-                $this->catatPemakaian($v['baris'], $bagianId);
+                $this->catatPemakaian($v['baris'], $bagianId, $emrId);
+                BillingHelper::syncTindakanMedis($emrId);
             });
 
             return redirect()->back()->with('success', 'Tindakan Medis berhasil disimpan.');
@@ -203,7 +205,9 @@ class TindakanMedisController extends Controller
 
                 EmrHelper::update((int) $emr_id, (int) $form_id, $this->filteredData($request, (int) $form_id, $v['data']));
 
-                $this->catatPemakaian($v['baris'], $bagianId);
+                $this->catatPemakaian($v['baris'], $bagianId, (int) $emr_id);
+                BillingHelper::voidEmr((int) $emr_id);
+                BillingHelper::syncTindakanMedis((int) $emr_id);
             });
 
             return redirect()->back()->with('success', 'Tindakan Medis berhasil diperbarui.');
@@ -227,6 +231,7 @@ class TindakanMedisController extends Controller
                 $this->kembalikanPemakaian($this->barisObatTersimpan((int) $emr_id), $bagianId);
 
                 EmrHelper::delete((int) $emr_id);
+                BillingHelper::voidEmr((int) $emr_id);
             });
 
             return redirect()->back()->with('success', 'Tindakan Medis berhasil dihapus.');
@@ -383,7 +388,7 @@ class TindakanMedisController extends Controller
     }
 
     /** Catat stok keluar untuk setiap baris obat/BMHP yang dipakai. */
-    private function catatPemakaian(array $baris, int $bagianId): void
+    private function catatPemakaian(array $baris, int $bagianId, ?int $emrId = null): void
     {
         foreach ($baris as $item) {
             StockHelper::catatPemakaian(
@@ -391,7 +396,7 @@ class TindakanMedisController extends Controller
                 $item['barang_id'],
                 $item['no_batch'],
                 $item['jumlah'],
-                ['keterangan' => 'Pemakaian - Tindakan Medis']
+                ['keterangan' => 'Pemakaian - Tindakan Medis', 'ref_emr_id' => $emrId]
             );
         }
     }

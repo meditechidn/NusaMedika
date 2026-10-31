@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Administrator\ManajemenMaster\MasterTarif;
 use App\Http\Controllers\Controller;
 use App\Models\KategoriTindakan;
 use App\Models\KelasRuang;
+use App\Models\Tarif;
 use App\Models\Tindakan;
-use App\Models\TindakanHarga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,7 @@ class MasterTarifController extends Controller
 
         $query = Tindakan::aktif()
             ->with('kategori')
-            ->with(['harga' => fn ($q) => $q->orderByRaw('kelas_ruang_id IS NULL DESC')]);
+            ->with(['tarif' => fn ($q) => $q->orderByRaw('kelas_ruang_id IS NULL DESC')]);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -54,7 +54,7 @@ class MasterTarifController extends Controller
         }
 
         $belumAdaTarif = Tindakan::aktif()
-            ->doesntHave('harga')
+            ->doesntHave('tarif')
             ->with('kategori')
             ->orderBy('nama_tindakan')
             ->get();
@@ -87,7 +87,7 @@ class MasterTarifController extends Controller
     {
         $tindakan = Tindakan::aktif()->with('kategori')->findOrFail($masterTarif);
 
-        $tarifByKelas = $tindakan->harga
+        $tarifByKelas = $tindakan->tarif
             ->mapWithKeys(fn ($h) => [(string) ($h->kelas_ruang_id ?? 'default') => $h->tarif])
             ->all();
 
@@ -121,11 +121,17 @@ class MasterTarifController extends Controller
     {
         DB::beginTransaction();
         try {
-            $harga = TindakanHarga::aktif()->findOrFail($masterTarif);
-            $harga->status_batal = 1;
-            $harga->mod_time = now();
-            $harga->mod_user_id = Auth::id();
-            $harga->save();
+            $tindakan = Tindakan::aktif()->findOrFail($masterTarif);
+
+            Tarif::where('tindakan_id', $tindakan->tindakan_id)
+                ->where(function ($q) {
+                    $q->whereNull('status_batal')->orWhere('status_batal', 0);
+                })
+                ->update([
+                    'status_batal' => 1,
+                    'mod_time' => now(),
+                    'mod_user_id' => Auth::id(),
+                ]);
 
             DB::commit();
 
@@ -147,7 +153,7 @@ class MasterTarifController extends Controller
         $user = Auth::id();
         $now = now();
 
-        TindakanHarga::where('tindakan_id', $tindakanId)
+        Tarif::where('tindakan_id', $tindakanId)
             ->where(function ($q) {
                 $q->whereNull('status_batal')->orWhere('status_batal', 0);
             })
@@ -171,7 +177,7 @@ class MasterTarifController extends Controller
                 continue;
             }
 
-            $harga = new TindakanHarga;
+            $harga = new Tarif;
             $harga->tindakan_id = $tindakanId;
             $harga->kelas_ruang_id = $key === 'default' ? null : (int) $key;
             $harga->tarif = $tarif;

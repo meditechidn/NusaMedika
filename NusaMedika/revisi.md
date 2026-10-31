@@ -1,0 +1,2 @@
+1. di daftar billing tetap per episode 1 pasien bisa ke banyak jenis rawat RI, IGD dan RJ
+2. di detail billing pasien muncul per registrasi detail misal POLI INTERNA, INSTALASI GAWAT DARURAT, RADIOLOGI, LABORATORIUM, RUANG PERAWTAN MAWAR. nnti disitu setiap bagian ada detail tindakan atau billing apa saja yang telah diberikan.

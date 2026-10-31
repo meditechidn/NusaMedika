@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'SIMRS') }}</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="icon" type="image/png" href="{{ asset('logo_blue.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('logo_white.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Dependencies loaded via Vite (app.js & app.css) -->
     <style>

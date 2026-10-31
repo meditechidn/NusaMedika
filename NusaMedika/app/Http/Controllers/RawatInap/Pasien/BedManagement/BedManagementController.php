@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\RawatInap\Pasien\BedManagement;
 
+use App\Helpers\BillingHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Bagian;
 use App\Models\Bed;
 use App\Models\KelasRuang;
+use App\Models\Registrasi;
 use App\Models\RegistrasiDetail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -227,6 +229,8 @@ class BedManagementController extends Controller
             $bed->mod_user_id = Auth::id();
             $bed->save();
 
+            BillingHelper::syncKamar($registrasi);
+
             DB::commit();
 
             return back()->with('success', 'Pasien berhasil ditempatkan ke bed.');
@@ -351,18 +355,21 @@ class BedManagementController extends Controller
                             'mod_user_id' => Auth::id(),
                         ]);
 
-                    DB::table('bill_temp')
-                        ->whereIn('registrasi_detail_id', $detailIds)
-                        ->where(function ($q) {
-                            $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                        })
-                        ->update([
-                            'status_selesai' => 1,
-                            'mod_time' => now(),
-                            'mod_user_id' => Auth::id(),
-                        ]);
                 }
             }
+
+            BillingHelper::syncKamar(Registrasi::findOrFail($registrasi->registrasi_id));
+
+            DB::table('billing')
+                ->where('registrasi_id', $registrasi->registrasi_id)
+                ->where(function ($q) {
+                    $q->whereNull('status_batal')->orWhere('status_batal', 0);
+                })
+                ->update([
+                    'status_selesai' => 1,
+                    'mod_time' => now(),
+                    'mod_user_id' => Auth::id(),
+                ]);
 
             DB::commit();
 
@@ -423,6 +430,8 @@ class BedManagementController extends Controller
 
             // Kosongkan bed sebelumnya
             $this->kosongkanBed($current, $tglPindah);
+
+            BillingHelper::syncKamar(Registrasi::findOrFail($detailAktif->registrasi_id));
 
             // Catat pergerakan pasien di bed_log
             DB::table('bed_log')->insert([
@@ -595,42 +604,6 @@ class BedManagementController extends Controller
                 'input_time' => $tglPindah,
                 'input_user_id' => Auth::id(),
             ]);
-
-            // Tutup bill detail lama & buat bill baru untuk detail baru
-            $billLama = DB::table('bill_temp')
-                ->whereIn('registrasi_detail_id', $detailIds ?: [0])
-                ->where(function ($q) {
-                    $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                })
-                ->orderBy('bill_temp_id', 'desc')
-                ->first();
-
-            if ($billLama) {
-                DB::table('bill_temp')
-                    ->whereIn('registrasi_detail_id', $detailIds)
-                    ->where(function ($q) {
-                        $q->whereNull('status_batal')->orWhere('status_batal', 0);
-                    })
-                    ->update([
-                        'status_selesai' => 1,
-                        'mod_time' => $tglPindah,
-                        'mod_user_id' => Auth::id(),
-                    ]);
-
-                DB::table('bill_temp')->insert([
-                    'registrasi_detail_id' => $registrasiDetailId,
-                    'pasien_id' => $pasienId,
-                    'bagian_id' => $target->bagian_id,
-                    'nasabah_id' => $billLama->nasabah_id,
-                    'kelas_ruang_id' => $billLama->kelas_ruang_id,
-                    'hak_kelas_ruang_id' => $billLama->hak_kelas_ruang_id,
-                    'tgl_bill' => $tglPindah,
-                    'status_selesai' => 0,
-                    'input_time' => $tglPindah,
-                    'input_user_id' => Auth::id(),
-                ], 'registrasi_detail_id');
-
-            }
 
             // Catat pergerakan pasien di bed_log
             DB::table('bed_log')->insert([

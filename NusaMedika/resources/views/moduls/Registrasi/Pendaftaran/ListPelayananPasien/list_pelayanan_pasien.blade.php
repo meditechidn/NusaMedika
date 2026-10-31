@@ -90,15 +90,7 @@
                 <tbody class="text-[12px] divide-y divide-slate-100">
                     @foreach($kunjungan as $idx => $row)
                         @php
-                            $isClosed = false;
-                            
-                            // Check closed status from billTemp
-                            foreach ($row->registrasiDetails as $detail) {
-                                if ($detail->billTemp && $detail->billTemp->status_selesai == 1) {
-                                    $isClosed = true;
-                                    break;
-                                }
-                            }
+                            $isClosed = $row->billing && (int) $row->billing->status_selesai === 1;
                         @endphp
                         <tr class="hover:bg-blue-50/40 transition-colors">
                             <td class="px-3 py-3 text-center text-slate-500">

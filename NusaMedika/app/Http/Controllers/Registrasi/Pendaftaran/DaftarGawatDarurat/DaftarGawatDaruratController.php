@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Registrasi\Pendaftaran\DaftarGawatDarurat;
 
+use App\Helpers\BillingHelper;
 use App\Helpers\GenerateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Bagian;
-use App\Models\BillTemp;
 use App\Models\DiagnosaRawat;
 use App\Models\KelasRuang;
 use App\Models\Nasabah;
@@ -165,19 +165,7 @@ class DaftarGawatDaruratController extends Controller
             $registrasiDetail->input_user_id = auth()->id();
             $registrasiDetail->save();
 
-            $billTemp = new BillTemp;
-            $billTemp->registrasi_detail_id = $registrasiDetail->registrasi_detail_id;
-            $billTemp->pasien_id = $pasien->pasien_id;
-            $billTemp->bagian_id = $data['ruang_id'];
-            $billTemp->nasabah_id = $data['nasabah_id'];
-            $billTemp->kelas_ruang_id = $hakKelasId;
-            $billTemp->hak_kelas_ruang_id = $kelasId;
-            $billTemp->tgl_bill = now();
-            $billTemp->status_selesai = 0;
-            $billTemp->status_batal = 0;
-            $billTemp->input_time = now();
-            $billTemp->input_user_id = auth()->id();
-            $billTemp->save();
+            BillingHelper::syncAdministrasi($registrasi, $registrasiDetail);
 
             if (! empty($data['icd_id'])) {
                 $diagnosaRawat = new DiagnosaRawat;

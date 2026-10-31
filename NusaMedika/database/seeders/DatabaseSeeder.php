@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ModulMenuSubMenuSeeder::class,
             MasterPegawaiSeeder::class,
             UserSeeder::class,
+            BillingMenuSeeder::class,
             WilayahSeeder::class,
             KelasRuangSeeder::class,
             BedSeeder::class,
@@ -39,6 +40,7 @@ class DatabaseSeeder extends Seeder
             TindakanSeeder::class,
             GroupTindakanSeeder::class,
             MasterTarifSeeder::class,
+            BillingSeeder::class,
             PasienDummySeeder::class,
             EmrMasterSeeder::class,
         ]);
@@ -60,7 +62,7 @@ class DatabaseSeeder extends Seeder
             'dashboard_menu', 'dashboard_menu_sub', 'dashboard_menu_sub_extra', 'form', 'akses_ehr',
             'objek', 'objek_form_control',
             'form_blanko', 'form_blanko_field', 'form_blanko_pengisian',
-            'kategori_tindakan', 'tindakan', 'tindakan_harga',
+            'kategori_tindakan', 'tindakan', 'tarif',
             'group_tindakan', 'group_tindakan_tindakan',
             'order_laboratorium', 'order_laboratorium_detail',
             'order_radiologi', 'order_radiologi_detail',
@@ -70,6 +72,7 @@ class DatabaseSeeder extends Seeder
             'notifikasi', 'notifikasi_penerima',
             'percakapan', 'pesan', 'status_sosial',
             'forum_topik', 'forum_balasan',
+            'billing', 'billing_detail',
         ];
 
         foreach ($tables as $table) {

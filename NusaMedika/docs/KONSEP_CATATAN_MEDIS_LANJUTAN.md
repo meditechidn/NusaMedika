@@ -1,5 +1,7 @@
 # Konsep Form EMR: Catatan Medis Lanjutan (Resume Medis, Care Plan, DAR, Visum)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 **Status:** Rancangan / Konsep — belum diimplementasikan
 **Tanggal:** 2026-10-10
 **Acuan:** [`PANDUAN_IMPLEMENTASI_FORM_EMR.md`](PANDUAN_IMPLEMENTASI_FORM_EMR.md),

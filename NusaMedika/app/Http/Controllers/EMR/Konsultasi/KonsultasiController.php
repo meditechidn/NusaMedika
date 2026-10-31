@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\EMR\Konsultasi;
 
 use App\Helpers\AksesEhr;
+use App\Helpers\BillingHelper;
 use App\Helpers\EmrHelper;
 use App\Helpers\GenerateHelper;
 use App\Http\Controllers\Controller;
@@ -18,8 +19,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * Form EMR "Formulir → Konsultasi" (multi-guna):
  *  - Konsultasi Rehabilitasi Medik → terbitkan registrasi_detail bagian rehab.
- *  - Konsul Layanan Klinik         → terbitkan registrasi_detail poli tujuan + bill_temp
- *                                    + registrasi_urut + penanggung_rawat (muncul di List Pasien Dokter).
+ *  - Konsul Layanan Klinik         → terbitkan registrasi_detail poli tujuan + registrasi_urut
+ *                                    + penanggung_rawat (muncul di List Pasien Dokter).
  *  - Rencana Kontrol Rawat Jalan   → hanya simpan EMR (bisa dicetak).
  */
 class KonsultasiController extends Controller
@@ -194,10 +195,13 @@ class KonsultasiController extends Controller
                 // 2. Terbitkan registrasi_detail tujuan bagian rehab (masih satu registrasi)
                 $this->terbitkanDetailTujuan($registrasi_detail, (int) $request->input('bagian_rehab_id'));
             } elseif ($jenisKonsultasi === 'KONSUL_LAYANAN') {
-                // 2-5. Terbitkan registrasi_detail poli tujuan + bill_temp + registrasi_urut + penanggung_rawat
+                // 2-5. Terbitkan registrasi_detail poli tujuan + registrasi_urut + penanggung_rawat
                 $this->terbitkanKonsulLayanan($registrasi_detail, (int) $request->input('bagian_tujuan_id'), (int) $request->input('dokter_tujuan_id'));
             }
             // RENCANA_KONTROL: hanya EMR, tanpa registrasi/registrasi_detail baru.
+            if ($jenisKonsultasi !== 'RENCANA_KONTROL') {
+                BillingHelper::syncKonsultasi($registrasi_detail->registrasi, $registrasi_detail, (int) $request->input('dokter_tujuan_id'));
+            }
 
             DB::commit();
 
@@ -317,7 +321,6 @@ class KonsultasiController extends Controller
     /**
      * Konsul Layanan Klinik (konsul internal poli):
      *  - registrasi_detail tujuan poli,
-     *  - bill_temp (snapshot kelas/nasabah, mengikuti DaftarRajal),
      *  - registrasi_urut (antrian dokter konsulen),
      *  - penanggung_rawat (rawat_user_id = user dokter konsulen).
      */
@@ -337,25 +340,6 @@ class KonsultasiController extends Controller
             'input_time' => now(),
             'input_user_id' => auth()->id(),
         ], 'registrasi_detail_id');
-
-        // bill_temp — snapshot nasabah & kelas dari registrasi/detail asal
-        $nasabahId = $registrasi->pasien_nasabah_id
-            ? DB::table('pasien_nasabah')->where('pasien_nasabah_id', $registrasi->pasien_nasabah_id)->value('nasabah_id')
-            : null;
-
-        DB::table('bill_temp')->insert([
-            'registrasi_detail_id' => $registrasiDetailId,
-            'pasien_id' => $registrasi->pasien_id,
-            'bagian_id' => $bagianTujuanId,
-            'nasabah_id' => $nasabahId,
-            'kelas_ruang_id' => $asal->hak_kelas_id,
-            'hak_kelas_ruang_id' => $asal->kelas_id,
-            'tgl_bill' => now(),
-            'status_selesai' => 0,
-            'status_batal' => 0,
-            'input_time' => now(),
-            'input_user_id' => auth()->id(),
-        ]);
 
         // registrasi_urut — antrian dokter konsulen (urutan dihitung dari jadwal hari ini)
         $tglKunjungan = now()->toDateString();

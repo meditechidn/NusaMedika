@@ -44,7 +44,7 @@ class ListPasienGawatDaruratController extends Controller
                 ->join('pasien as p', 'p.pasien_id', '=', 'r.pasien_id')
                 ->join('pasien_nasabah as pn', 'pn.pasien_nasabah_id', '=', 'r.pasien_nasabah_id')
                 ->join('nasabah as n', 'n.nasabah_id', '=', 'pn.nasabah_id')
-                ->join('bill_temp as bt', 'bt.registrasi_detail_id', '=', 'rd.registrasi_detail_id')
+                ->leftJoin('billing as bt', 'bt.registrasi_id', '=', 'r.registrasi_id')
                 ->leftJoin('penanggung_rawat as pr', 'pr.registrasi_id', '=', 'r.registrasi_id')
                 ->leftJoin('users as u', 'u.user_id', '=', 'pr.rawat_user_id')
                 ->leftJoin('pegawai as pg', 'pg.pegawai_id', '=', 'u.pegawai_id')

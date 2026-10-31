@@ -68,6 +68,7 @@ class StockHelper
         $kartu->ref_penerimaan_detail_id = $opts['ref_penerimaan_detail_id'] ?? null;
         $kartu->ref_mutasi_barang_detail_id = $opts['ref_mutasi_barang_detail_id'] ?? null;
         $kartu->ref_peresepan_obat_detail_id = $opts['ref_peresepan_obat_detail_id'] ?? null;
+        $kartu->ref_emr_id = $opts['ref_emr_id'] ?? null;
         $kartu->qty_masuk = $masuk;
         $kartu->qty_keluar = $keluar;
         $kartu->saldo_sebelum = $sebelum;

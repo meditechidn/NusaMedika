@@ -46,8 +46,8 @@ class Tindakan extends Model
             );
     }
 
-    public function harga(): HasMany
+    public function tarif(): HasMany
     {
-        return $this->hasMany(TindakanHarga::class, 'tindakan_id', 'tindakan_id')->aktif();
+        return $this->hasMany(Tarif::class, 'tindakan_id', 'tindakan_id')->aktif();
     }
 }

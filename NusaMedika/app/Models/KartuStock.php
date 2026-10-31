@@ -23,6 +23,7 @@ class KartuStock extends Model
         'ref_penerimaan_detail_id',
         'ref_mutasi_barang_detail_id',
         'ref_peresepan_obat_detail_id',
+        'ref_emr_id',
         'qty_masuk',
         'qty_keluar',
         'saldo_sebelum',

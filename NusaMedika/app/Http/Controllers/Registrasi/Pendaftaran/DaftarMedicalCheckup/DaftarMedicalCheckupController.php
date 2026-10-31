@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Registrasi\Pendaftaran\DaftarMedicalCheckup;
 
+use App\Helpers\BillingHelper;
 use App\Helpers\GenerateHelper;
 use App\Http\Controllers\Controller;
-use App\Models\BillTemp;
 use App\Models\DiagnosaRawat;
 use App\Models\JadwalDokter;
 use App\Models\KelasRuang;
@@ -175,19 +175,8 @@ class DaftarMedicalCheckupController extends Controller
             $registrasiDetail->input_user_id = auth()->id();
             $registrasiDetail->save();
 
-            $billTemp = new BillTemp;
-            $billTemp->registrasi_detail_id = $registrasiDetail->registrasi_detail_id;
-            $billTemp->pasien_id = $request->pasien_id;
-            $billTemp->bagian_id = $request->poliklinik;
-            $billTemp->nasabah_id = $request->nasabah_id;
-            $billTemp->kelas_ruang_id = $hakKelasId;
-            $billTemp->hak_kelas_ruang_id = $kelasId;
-            $billTemp->tgl_bill = now();
-            $billTemp->status_selesai = 0;
-            $billTemp->status_batal = 0;
-            $billTemp->input_time = now();
-            $billTemp->input_user_id = auth()->id();
-            $billTemp->save();
+            BillingHelper::syncAdministrasi($registrasi, $registrasiDetail);
+            BillingHelper::syncSuket($registrasi, $registrasiDetail);
 
             $tglKunjungan = Carbon::parse($request->tgl_kunjungan)->toDateString();
 

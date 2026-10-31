@@ -26,11 +26,6 @@ class RegistrasiDetail extends Model
         return $this->belongsTo(Bagian::class, 'bagian_id', 'bagian_id');
     }
 
-    public function billTemp()
-    {
-        return $this->hasOne(BillTemp::class, 'registrasi_detail_id', 'registrasi_detail_id');
-    }
-
     public function registrasi()
     {
         return $this->belongsTo(Registrasi::class, 'registrasi_id', 'registrasi_id');

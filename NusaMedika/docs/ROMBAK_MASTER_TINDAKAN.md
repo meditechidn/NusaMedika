@@ -32,7 +32,7 @@ Sisa kolom yang dihapus (`satuan_hasil`, `nilai_normal`, `kode_bpjs`, `kode_inac
 | `satuan_hasil`/`nilai_normal` | snapshot di `order_laboratorium_detail` **tetap**, sumbernya **diisi manual** di form order |
 | Tarif | **satu tarif per tindakan per kelas**, ada **baris tarif default** (`kelas_ruang_id` NULL) |
 | `tarif_bpjs` | **dihapus** |
-| Master Tarif | memakai tabel `tindakan_harga` yang sudah ada (tidak ada tabel baru) |
+| Master Tarif | memakai tabel `tarif` (satu baris per tindakan per kelas + baris default) |
 | 1 tindakan di banyak unit | query **distinct, ambil group terkecil** (`group_tindakan_id` min) |
 | Penempatan sub_menu baru | ketiganya di **Administrator → Manajemen Master** (menu 9), sejajar Master Kelas / Master ICD |
 
@@ -161,13 +161,13 @@ Sync pivot memakai pola `syncBarangMappings()` yang sudah ada di `SupplierContro
 
 ### 4.3 Master Tarif
 
-Master ini mengelola tabel `tindakan_harga` yang sudah ada, dengan kolom yang tersisa setelah `tarif_bpjs` dihapus.
+Master ini mengelola tabel `tarif` (`2026_10_31_000001`, menggantikan `tindakan_harga`), satu baris per (tindakan, kelas) + baris default.
 
 - `index()` — daftar tindakan (kode, nama, kategori) + tarif default + jumlah kelas terisi + tombol "Atur Tarif". Kolom "Tarif Default" boleh link ke `edit`.
 - `create()` — `?tindakan_id=` wajib; form untuk **satu** tindakan.
 - `edit()` — `?tindakan_id=`; form sama, terisi.
 - `store()` / `update()` — `update()` melakukan **soft-delete semua baris aktif lalu insert ulang** (pola `syncHarga()` sekarang; ini yang membuat unique `['tindakan_id','kelas_ruang_id']` tetap aman).
-- `destroy($master_tarif)` — soft-delete satu baris berdasarkan `tindakan_harga_id`.
+- `destroy($master_tarif)` — soft-delete **seluruh** tarif aktif tindakan (parameter = `tindakan_id`).
 
 Form tarif (dipindah apa adanya dari `_form.blade.php` Master Tindakan):
 
@@ -359,7 +359,7 @@ Sudah dijalankan & diverifikasi lewat HTTP (`migrate:fresh --seed` + curl sessio
 | `kode_tindakan` duplikat | ditolak: *"kode tindakan sudah digunakan."* |
 | Kode lowercase `lab-0099` | dinormalisasi jadi `LAB-0099` |
 | Group sync pivot | pivot lama soft-delete, insert ulang |
-| Hapus tindakan | soft-delete `tindakan` + `tindakan_harga` + pivot group |
+| Hapus tindakan | soft-delete `tindakan` + `tarif` + pivot group |
 | Resolusi tarif | `tarif(1, 2)` = 65.000 (kelas 2); `tarif(1, null)` = 50.000 (default) |
 | Kelas kosong → fallback default | `tarif(12, 5)` = 45.000 (default), bukan 0 |
 | Order Lab: satuan/nilai manual per baris | tersimpan per baris, tidak bergeser walau indeks lompat |

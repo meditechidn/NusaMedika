@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Administrator\ManajemenMaster\MasterTindakan;
 
 use App\Http\Controllers\Controller;
 use App\Models\KategoriTindakan;
+use App\Models\Tarif;
 use App\Models\Tindakan;
-use App\Models\TindakanHarga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -123,7 +123,7 @@ class MasterTindakanController extends Controller
                     'mod_user_id' => $user,
                 ]);
 
-            TindakanHarga::where('tindakan_id', $tindakan->tindakan_id)
+            Tarif::where('tindakan_id', $tindakan->tindakan_id)
                 ->update([
                     'status_batal' => 1,
                     'mod_time' => $now,

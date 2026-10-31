@@ -23,6 +23,7 @@ class ModulMenuSubMenuSeeder extends Seeder
             ['modul_id' => 6, 'nama_modul' => 'Inventory', 'icon_modul' => 'fa-solid fa-box-archive', 'urutan_modul' => 8],
             ['modul_id' => 8, 'nama_modul' => 'Penunjang Medis', 'icon_modul' => 'fa-solid fa-microscope', 'urutan_modul' => 9],
             ['modul_id' => 10, 'nama_modul' => 'Social', 'icon_modul' => 'fa-solid fa-users', 'urutan_modul' => 10],
+            ['modul_id' => 11, 'nama_modul' => 'Billing', 'icon_modul' => 'fa-solid fa-file-invoice-dollar', 'urutan_modul' => 11],
         ];
 
         foreach ($moduls as $modul) {
@@ -67,6 +68,8 @@ class ModulMenuSubMenuSeeder extends Seeder
             ['menu_id' => 17, 'modul_id' => 9, 'nama_menu' => 'Pasien', 'urutan_menu' => 1],
             // Modul Social (10)
             ['menu_id' => 19, 'modul_id' => 10, 'nama_menu' => 'Interaksi', 'urutan_menu' => 1],
+            // Modul Billing (11)
+            ['menu_id' => 20, 'modul_id' => 11, 'nama_menu' => 'Transaksi', 'urutan_menu' => 1],
         ];
 
         foreach ($menus as $menu) {
@@ -164,6 +167,9 @@ class ModulMenuSubMenuSeeder extends Seeder
             ['sub_menu_id' => 56, 'menu_id' => 19, 'nama_sub_menu' => 'Status User', 'file_sub_menu' => 'Social/StatusUser/status_user', 'urutan_sub_menu' => 3],
             ['sub_menu_id' => 57, 'menu_id' => 19, 'nama_sub_menu' => 'Forum', 'file_sub_menu' => 'Social/Forum/forum', 'urutan_sub_menu' => 4],
             ['sub_menu_id' => 58, 'menu_id' => 19, 'nama_sub_menu' => 'Buat Topik', 'file_sub_menu' => 'Social/BuatTopik/buat_topik', 'urutan_sub_menu' => 5],
+            // Menu Transaksi (20) - Billing
+            ['sub_menu_id' => 66, 'menu_id' => 20, 'nama_sub_menu' => 'Daftar Billing', 'file_sub_menu' => 'Billing/Transaksi/DaftarBilling/daftar_billing', 'urutan_sub_menu' => 1],
+            ['sub_menu_id' => 67, 'menu_id' => 20, 'nama_sub_menu' => 'Billing Pasien', 'file_sub_menu' => 'Billing/Transaksi/BillingPasien/billing_pasien', 'urutan_sub_menu' => 2],
         ];
 
         foreach ($subMenus as $subMenu) {

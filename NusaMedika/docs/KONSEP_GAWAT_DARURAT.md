@@ -1,5 +1,7 @@
 # KONSEP MODUL GAWAT DARURAT (IGD)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 > Status: **Rancangan / Konsep** — belum diimplementasikan.
 > Dokumen ini menjadi acuan implementasi. Semua nama (folder, route, sub_menu, kolom baru) bersifat keputusan awal dan harus disepakati sebelum kode dibuat. Keputusan user yang sudah dikunci: (1) **Pasien Darurat (Mr. X)** dibuat sederhana (pasien tanpa identitas lengkap); (2) **Daftar IGD Obgyn ikut dilengkapi** pada iterasi yang sama; (3) **Ruangan/Zona IGD pakai dropdown statis** (`SelectOption::get('ruang_igd')`) yang disimpan di `registrasi_detail.lokasi_rawat`.
 

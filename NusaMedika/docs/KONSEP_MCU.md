@@ -1,5 +1,7 @@
 # KONSEP MODUL MEDICAL CHECKUP (MCU)
 
+> **Pembaruan:** tabel `bill_temp` dan model `BillTemp` sudah dihapus. Billing disatukan di tabel `billing` (penanda selesai = `billing.status_selesai`). Referensi `bill_temp` di bawah adalah konteks historis.
+
 > Status: **Rancangan / Konsep** — belum diimplementasikan.
 > Dokumen ini menjadi acuan implementasi. Semua nama (folder, route, slug, sub_menu, modul_id/menu_id/sub_menu_id) bersifat keputusan awal dan harus disepakati sebelum kode dibuat.
 
