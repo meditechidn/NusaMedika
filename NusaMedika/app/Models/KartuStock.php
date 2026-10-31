@@ -46,6 +46,8 @@ class KartuStock extends Model
 
     public const JENIS_DISPENSE_OBAT = 5;
 
+    public const JENIS_PENYESUAIAN = 6;
+
     public const JENIS_LABEL = [
         self::JENIS_SALDO_AWAL => 'Saldo Awal',
         self::JENIS_PENERIMAAN => 'Penerimaan',
@@ -53,6 +55,7 @@ class KartuStock extends Model
         self::JENIS_MUTASI_KELUAR => 'Mutasi Keluar',
         self::JENIS_PEMAKAIAN => 'Pemakaian',
         self::JENIS_DISPENSE_OBAT => 'Dispense Obat',
+        self::JENIS_PENYESUAIAN => 'Penyesuaian Stock Opname',
     ];
 
     public function scopeAktif(Builder $query): Builder

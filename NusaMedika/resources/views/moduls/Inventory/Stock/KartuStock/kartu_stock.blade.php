@@ -128,6 +128,7 @@
                                 2 => 'bg-blue-100 text-blue-700',
                                 3 => 'bg-amber-100 text-amber-700',
                                 4 => 'bg-violet-100 text-violet-700',
+                                6 => 'bg-orange-100 text-orange-700',
                                 default => 'bg-slate-100 text-slate-600',
                             };
                         @endphp

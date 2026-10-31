@@ -6,6 +6,7 @@ use App\Models\KartuStock;
 use App\Models\Stock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 
 class StockHelper
 {
@@ -34,7 +35,8 @@ class StockHelper
         $hargaBeli = isset($opts['harga_beli']) ? (float) $opts['harga_beli'] : null;
         $hargaJual = isset($opts['harga_jual']) ? (float) $opts['harga_jual'] : null;
 
-        $stock = Stock::where('barang_id', $barangId)
+        $stock = Stock::aktif()
+            ->where('barang_id', $barangId)
             ->where('bagian_id', $bagianId)
             ->where('no_batch', $noBatch)
             ->where('harga_jual', $hargaJual)
@@ -59,6 +61,22 @@ class StockHelper
         $stock->mod_user_id = Auth::id();
         $stock->save();
 
+        self::tulisKartu($bagianId, $barangId, $noBatch, $masuk, $keluar, $sebelum, $sesudah, $opts, $hargaBeli, $hargaJual, $opts['tgl_expired'] ?? null);
+    }
+
+    private static function tulisKartu(
+        int $bagianId,
+        int $barangId,
+        ?string $noBatch,
+        float $masuk,
+        float $keluar,
+        float $sebelum,
+        float $sesudah,
+        array $opts,
+        ?float $hargaBeli = null,
+        ?float $hargaJual = null,
+        ?string $tglExpired = null,
+    ): void {
         $kartu = new KartuStock;
         $kartu->barang_id = $barangId;
         $kartu->no_batch = $noBatch;
@@ -75,12 +93,106 @@ class StockHelper
         $kartu->saldo_sesudah = $sesudah;
         $kartu->harga_beli = $hargaBeli;
         $kartu->harga_jual = $hargaJual;
-        $kartu->tgl_expired = $opts['tgl_expired'] ?? null;
+        $kartu->tgl_expired = $tglExpired;
         $kartu->keterangan = $opts['keterangan'] ?? null;
         $kartu->input_time = now();
         $kartu->input_user_id = Auth::id();
         $kartu->status_batal = 0;
         $kartu->save();
+    }
+
+    /**
+     * Sesuaikan saldo stok satu baris dengan hasil hitung fisik (Stock Opname).
+     *
+     * Selisih dicatat di `kartu_stock` sebagai jenis mutasi 6 (Penyesuaian Stock
+     * Opname) sehingga riwayat koreksi tetap terlacak. Mengembalikan null bila
+     * baris tidak ditemukan/tidak aktif atau jumlah fisik sama dengan sistem.
+     *
+     * @param  array{jenis_mutasi?: int, tanggal?: \DateTimeInterface|Carbon|null, keterangan?: string|null}  $opts
+     * @return array{sebelum: float, sesudah: float}|null
+     */
+    public static function sesuaikan(int $stockId, float $fisik, array $opts = []): ?array
+    {
+        if ($fisik < 0) {
+            throw new InvalidArgumentException('Jumlah stok fisik tidak boleh negatif.');
+        }
+
+        $stock = Stock::aktif()->lockForUpdate()->find($stockId);
+        if (! $stock) {
+            return null;
+        }
+
+        $sebelum = (float) ($stock->jumlah ?? 0);
+        if (abs($sebelum - $fisik) < 0.00001) {
+            return null;
+        }
+
+        $stock->jumlah = $fisik;
+        $stock->mod_time = now();
+        $stock->mod_user_id = Auth::id();
+        $stock->save();
+
+        self::tulisKartu(
+            (int) $stock->bagian_id,
+            (int) $stock->barang_id,
+            $stock->no_batch,
+            max(0.0, $fisik - $sebelum),
+            max(0.0, $sebelum - $fisik),
+            $sebelum,
+            $fisik,
+            array_merge([
+                'jenis_mutasi' => KartuStock::JENIS_PENYESUAIAN,
+                'keterangan' => 'Stock Opname',
+            ], $opts),
+            $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
+            $stock->harga_jual !== null ? (float) $stock->harga_jual : null,
+            $stock->tgl_expired ? substr((string) $stock->tgl_expired, 0, 10) : null,
+        );
+
+        return ['sebelum' => $sebelum, 'sesudah' => $fisik];
+    }
+
+    /**
+     * Hapus satu baris stok (soft delete) dengan catatan audit bila masih bersaldo.
+     *
+     * @param  array{keterangan?: string|null, tanggal?: \DateTimeInterface|Carbon|null}  $opts
+     * @return array{sebelum: float}|null
+     */
+    public static function hapus(int $stockId, array $opts = []): ?array
+    {
+        $stock = Stock::aktif()->lockForUpdate()->find($stockId);
+        if (! $stock) {
+            return null;
+        }
+
+        $sebelum = (float) ($stock->jumlah ?? 0);
+
+        if (abs($sebelum) > 0.00001) {
+            self::tulisKartu(
+                (int) $stock->bagian_id,
+                (int) $stock->barang_id,
+                $stock->no_batch,
+                0.0,
+                $sebelum,
+                $sebelum,
+                0.0,
+                array_merge([
+                    'jenis_mutasi' => KartuStock::JENIS_PENYESUAIAN,
+                    'keterangan' => 'Hapus stock (Stock Opname)',
+                ], $opts),
+                $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
+                $stock->harga_jual !== null ? (float) $stock->harga_jual : null,
+                $stock->tgl_expired ? substr((string) $stock->tgl_expired, 0, 10) : null,
+            );
+        }
+
+        $stock->status_batal = 1;
+        $stock->jumlah = 0;
+        $stock->mod_time = now();
+        $stock->mod_user_id = Auth::id();
+        $stock->save();
+
+        return ['sebelum' => $sebelum];
     }
 
     /**

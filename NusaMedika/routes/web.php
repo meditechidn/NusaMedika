@@ -13,6 +13,7 @@ use App\Http\Controllers\EMR\Soap\SoapController;
 use App\Http\Controllers\Farmasi\Resep\ListPesananResep\ListPesananResepController;
 use App\Http\Controllers\Inventory\Pesanan\BuatPesanan\BuatPesananController;
 use App\Http\Controllers\Inventory\Pesanan\SetujuiPesanan\SetujuiPesananController;
+use App\Http\Controllers\Inventory\Stock\StockOpname\StockOpnameController;
 use App\Http\Controllers\Notifikasi\NotifikasiPenerimaController;
 use App\Http\Controllers\PenunjangMedis\Laboratorium\DaftarPesananLaboratorium\DaftarPesananLaboratoriumController;
 use App\Http\Controllers\PenunjangMedis\Radiologi\DaftarPesananRadiologi\DaftarPesananRadiologiController;
@@ -98,6 +99,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/pemesanan/{pemesanan}/tolak', [SetujuiPesananController::class, 'tolak'])->name('pemesanan.tolak');
     Route::post('/pemesanan/{pemesanan}/batal', [BuatPesananController::class, 'batal'])->name('pemesanan.batal');
     Route::get('/pemesanan/{pemesanan}/cetak', [BuatPesananController::class, 'cetak'])->whereNumber('pemesanan')->name('pemesanan.cetak');
+
+    // Hapus seluruh stok aktif pada satu bagian (aksi massal Stock Opname).
+    Route::post('/stock_opname/hapus-semua', [StockOpnameController::class, 'hapusSemua'])->name('stock_opname.hapus_semua');
 
     // ============ ROUTE FARMASI ============= #
     // Aksi non-CRUD peresepan (pilih depo / dispense / batal) didaftarkan manual.

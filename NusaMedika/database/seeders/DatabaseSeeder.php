@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             MasterPegawaiSeeder::class,
             UserSeeder::class,
             BillingMenuSeeder::class,
+            StockOpnameMenuSeeder::class,
             WilayahSeeder::class,
             KelasRuangSeeder::class,
             BedSeeder::class,

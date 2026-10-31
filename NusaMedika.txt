@@ -9,11 +9,8 @@
 
 
 ======================== TASK ====================
-1. Billing
-- Sesuaikan cukup hanya ada billing dan billing_detail
-- Setiap tindakan yang di input harus masuk billing_detail 
-- cukup ada status tutup billing dulu
-- untuk proses pembayaran dan yang lebih lanjut tunda dulu
+
+
 
 
 
