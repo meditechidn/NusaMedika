@@ -25,6 +25,10 @@ class BarangSeeder extends Seeder
 
         $jenisId = fn (string $nama) => DB::table('barang_jenis')
             ->where('nama_jenis_barang', $nama)
+            ->where(function ($q) {
+                $q->whereNull('status_batal')->orWhere('status_batal', 0);
+            })
+            ->orderBy('barang_jenis_id')
             ->value('barang_jenis_id');
 
         $satuanId = fn (string $nama) => DB::table('satuan')

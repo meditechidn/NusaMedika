@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pemesanan/{pemesanan}/setujui', [SetujuiPesananController::class, 'setujui'])->name('pemesanan.setujui');
     Route::post('/pemesanan/{pemesanan}/tolak', [SetujuiPesananController::class, 'tolak'])->name('pemesanan.tolak');
     Route::post('/pemesanan/{pemesanan}/batal', [BuatPesananController::class, 'batal'])->name('pemesanan.batal');
+    Route::get('/pemesanan/{pemesanan}/cetak', [BuatPesananController::class, 'cetak'])->whereNumber('pemesanan')->name('pemesanan.cetak');
 
     // ============ ROUTE FARMASI ============= #
     // Aksi non-CRUD peresepan (pilih depo / dispense / batal) didaftarkan manual.

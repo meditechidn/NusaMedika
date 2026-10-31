@@ -203,6 +203,16 @@ class BuatPesananController extends Controller
         }
     }
 
+    public function cetak($pemesanan)
+    {
+        $pemesanan = Pemesanan::with([
+            'bagian',
+            'details' => fn ($q) => $q->aktif()->with(['barang.satuan', 'supplier', 'distributor']),
+        ])->findOrFail($pemesanan);
+
+        return view('moduls.Inventory.Pesanan.BuatPesanan.surat_pesanan', compact('pemesanan'));
+    }
+
     private function simpanDetail(int $pemesananId, array $items): void
     {
         foreach ($items as $item) {

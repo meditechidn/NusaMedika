@@ -56,6 +56,8 @@
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bagian</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tanggal Terima</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Jumlah Item</th>
+                    <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Status Pesanan</th>
+                    <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="text-[12px] divide-y divide-slate-100">
@@ -70,10 +72,30 @@
                         <td class="px-3 py-3 text-slate-600">{{ $r->bagian->nama_bagian ?? '-' }}</td>
                         <td class="px-3 py-3 text-slate-600">{{ \Carbon\Carbon::parse($r->tanggal_terima)->format('d-m-Y') }}</td>
                         <td class="px-3 py-3 text-center text-slate-600">{{ $r->details->count() }}</td>
+                        <td class="px-3 py-3 text-center">
+                            @php
+                                $statusPo = (int) ($r->pemesanan->status_pemesanan ?? 0);
+                                $badgePo = match ($statusPo) {
+                                    2 => 'bg-emerald-100 text-emerald-700',
+                                    3 => 'bg-red-100 text-red-600',
+                                    4 => 'bg-indigo-100 text-indigo-700',
+                                    default => 'bg-amber-100 text-amber-700',
+                                };
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold {{ $badgePo }}">
+                                {{ $r->pemesanan->status_label ?? '-' }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <a href="{{ route('pemesanan.cetak', $r->pemesanan_id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-800 transition-colors" title="Cetak Surat Pesanan">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                Surat Pesanan
+                            </a>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-3 py-12 text-center">
+                        <td colspan="8" class="px-3 py-12 text-center">
                             <div class="flex flex-col items-center gap-2 text-slate-400">
                                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                                 <p class="text-sm font-medium">Belum ada data penerimaan barang.</p>

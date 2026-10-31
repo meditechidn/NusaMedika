@@ -76,6 +76,7 @@
             1 => 'bg-blue-100 text-blue-700',
             2 => 'bg-emerald-100 text-emerald-700',
             3 => 'bg-red-100 text-red-600',
+            4 => 'bg-indigo-100 text-indigo-700',
             default => 'bg-amber-100 text-amber-700',
         };
     @endphp
@@ -92,6 +93,11 @@
                         </td>
                         <td class="px-3 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
+                                @if (in_array((int) $p->status_pemesanan, [2, 4], true))
+                                    <a href="{{ route('pemesanan.cetak', $p->pemesanan_id) }}" target="_blank" class="cursor-pointer p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-md transition-colors" title="Cetak Surat Pesanan">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    </a>
+                                @endif
                                 @if ((int) $p->status_pemesanan === 0)
                                     <a href="{{ route('buat_pesanan.edit', $p->pemesanan_id) }}" class="cursor-pointer p-1.5 text-blue-500 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors" title="Edit Data">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>

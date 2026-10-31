@@ -40,15 +40,21 @@ class PenerimaanBarangController extends Controller
             $pemesanan = $this->poTerverima($pemesananId);
 
             if (! $pemesanan) {
-                return redirect()->route('penerimaan_barang.create')->with('error', 'Pemesanan tidak valid atau sudah diterima.');
+                return redirect()->route('penerimaan_barang.create')->with('error', 'Pemesanan tidak valid atau sudah diterima lengkap.');
             }
 
-            return view('moduls.Inventory.Penerimaan.PenerimaanBarang.penerimaan_barang_create', compact('pemesanan'));
+            $sisa = $this->sisaPerBarang($pemesanan);
+
+            return view('moduls.Inventory.Penerimaan.PenerimaanBarang.penerimaan_barang_create', compact('pemesanan', 'sisa'));
         }
 
         $pemesananList = $this->listPoSiapTerima();
 
-        return view('moduls.Inventory.Penerimaan.PenerimaanBarang.penerimaan_barang_pilih', compact('pemesananList'));
+        $sisaMap = $pemesananList
+            ->mapWithKeys(fn ($po) => [$po->pemesanan_id => $this->sisaPerBarang($po)])
+            ->all();
+
+        return view('moduls.Inventory.Penerimaan.PenerimaanBarang.penerimaan_barang_pilih', compact('pemesananList', 'sisaMap'));
     }
 
     public function store(Request $request)
@@ -57,7 +63,7 @@ class PenerimaanBarangController extends Controller
         $pemesanan = $this->poTerverima($data['pemesanan_id']);
 
         if (! $pemesanan) {
-            return back()->with('error', 'Pemesanan tidak valid atau sudah diterima.');
+            return back()->with('error', 'Pemesanan tidak valid atau sudah diterima lengkap.');
         }
 
         try {
@@ -120,14 +126,24 @@ class PenerimaanBarangController extends Controller
                 );
             }
 
-            $pemesanan->status_pemesanan = 2;
+            $lengkap = $this->pesananLengkap($pemesanan);
+
+            $pemesanan->status_pemesanan = $lengkap ? 2 : 4;
             $pemesanan->mod_time = now();
             $pemesanan->mod_user_id = Auth::id();
             $pemesanan->save();
 
             DB::commit();
 
-            return redirect()->route('penerimaan_barang.index')->with('success', 'Penerimaan berhasil dicatat dan stock bertambah.');
+            if ($lengkap) {
+                return redirect()
+                    ->route('pemesanan.cetak', $pemesanan->pemesanan_id)
+                    ->with('success', 'Penerimaan lengkap. Status pesanan selesai - silakan cetak surat pesanan.');
+            }
+
+            return redirect()
+                ->route('penerimaan_barang.index')
+                ->with('success', 'Penerimaan sebagian tersimpan. Sisa pesanan masih dapat diterima.');
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -137,27 +153,20 @@ class PenerimaanBarangController extends Controller
 
     private function listPoSiapTerima()
     {
-        $alreadyReceived = Penerimaan::aktif()->pluck('pemesanan_id');
-
         return Pemesanan::aktif()
             ->with(['bagian', 'details' => fn ($q) => $q->aktif()->with('barang.satuan', 'supplier', 'distributor')])
-            ->where('status_pemesanan', 1)
-            ->whereNotIn('pemesanan_id', $alreadyReceived)
+            ->whereIn('status_pemesanan', [1, 4])
             ->orderBy('pemesanan_id')
             ->get();
     }
 
     private function poTerverima($pemesananId)
     {
-        $alreadyReceived = Penerimaan::aktif()->pluck('pemesanan_id');
-        $pemesanan = Pemesanan::aktif()
+        return Pemesanan::aktif()
             ->with(['bagian', 'details' => fn ($q) => $q->aktif()->with('barang.satuan', 'supplier', 'distributor')])
-            ->where('status_pemesanan', 1)
+            ->whereIn('status_pemesanan', [1, 4])
             ->where('pemesanan_id', (int) $pemesananId)
-            ->whereNotIn('pemesanan_id', $alreadyReceived)
             ->first();
-
-        return $pemesanan;
     }
 
     private function validated(Request $request)
@@ -182,6 +191,7 @@ class PenerimaanBarangController extends Controller
         $expireds = (array) $request->input('tgl_expired', []);
 
         $poDtl = $pemesanan->details->keyBy('barang_id');
+        $sisa = $this->sisaPerBarang($pemesanan);
 
         $items = [];
         foreach ($barangIds as $i => $barangId) {
@@ -209,7 +219,11 @@ class PenerimaanBarangController extends Controller
                 throw new \RuntimeException('Tanggal expired wajib diisi untuk '.($poDetail->barang->nama_barang ?? '#'.$barangId).'.');
             }
 
-            $sisaPesan = max(0, (float) $poDetail->jumlah_pesan);
+            $sisaPesan = $sisa[(int) $barangId]['sisa'] ?? 0;
+
+            if ($sisaPesan <= 0) {
+                continue;
+            }
 
             if ($jumlah > $sisaPesan) {
                 throw new \RuntimeException('Jumlah terima melebihi jumlah pesan untuk barang '.($poDetail->barang->nama_barang ?? '#'.$barangId).'.');
@@ -226,5 +240,70 @@ class PenerimaanBarangController extends Controller
         }
 
         return $items;
+    }
+
+    /**
+     * Total barang yang sudah diterima (akumulasi semua penerimaan aktif) per barang.
+     *
+     * @return array<int, float>
+     */
+    private function sudahDiterimaPerBarang(Pemesanan $pemesanan): array
+    {
+        $rows = DB::table('penerimaan_detail as pd')
+            ->join('penerimaan as p', 'pd.penerimaan_id', '=', 'p.penerimaan_id')
+            ->where('p.pemesanan_id', $pemesanan->pemesanan_id)
+            ->where(function ($q) {
+                $q->whereNull('p.status_batal')->orWhere('p.status_batal', 0);
+            })
+            ->where(function ($q) {
+                $q->whereNull('pd.status_batal')->orWhere('pd.status_batal', 0);
+            })
+            ->groupBy('pd.barang_id')
+            ->select('pd.barang_id', DB::raw('SUM(pd.jumlah_terima) as total'))
+            ->pluck('total', 'barang_id');
+
+        $hasil = [];
+        foreach ($rows as $barangId => $total) {
+            $hasil[(int) $barangId] = (float) $total;
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Ringkasan jumlah pesan / sudah diterima / sisa per barang pada satu PO.
+     *
+     * @return array<int, array{pesan: float, diterima: float, sisa: float}>
+     */
+    private function sisaPerBarang(Pemesanan $pemesanan): array
+    {
+        $sudah = $this->sudahDiterimaPerBarang($pemesanan);
+        $hasil = [];
+
+        foreach ($pemesanan->details as $detail) {
+            $pesan = (float) $detail->jumlah_pesan;
+            $diterima = $sudah[(int) $detail->barang_id] ?? 0.0;
+
+            $hasil[(int) $detail->barang_id] = [
+                'pesan' => $pesan,
+                'diterima' => $diterima,
+                'sisa' => max(0, $pesan - $diterima),
+            ];
+        }
+
+        return $hasil;
+    }
+
+    private function pesananLengkap(Pemesanan $pemesanan): bool
+    {
+        $sudah = $this->sudahDiterimaPerBarang($pemesanan);
+
+        foreach ($pemesanan->details as $detail) {
+            if (($sudah[(int) $detail->barang_id] ?? 0.0) < (float) $detail->jumlah_pesan) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

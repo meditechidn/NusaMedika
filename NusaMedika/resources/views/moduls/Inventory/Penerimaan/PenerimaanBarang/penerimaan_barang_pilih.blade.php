@@ -20,7 +20,12 @@
         <!-- Header Kartu -->
         <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-                <h2 class="text-base font-bold text-slate-800">{{ $p->no_pemesanan }}</h2>
+                <h2 class="text-base font-bold text-slate-800">
+                    {{ $p->no_pemesanan }}
+                    @if ((int) $p->status_pemesanan === 4)
+                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 align-middle">Proses Sebagian</span>
+                    @endif
+                </h2>
                 <p class="text-xs text-slate-500 mt-0.5">
                     {{ \Carbon\Carbon::parse($p->tanggal_pemesanan)->format('d-m-Y') }}
                     @if ($p->bagian)
@@ -46,12 +51,21 @@
                         <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Distributor</th>
                         <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Satuan</th>
                         <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Jumlah Pesan</th>
+                        <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Sudah Diterima</th>
+                        <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Sisa</th>
                         <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Harga Beli</th>
                         <th class="px-5 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody class="text-[12px] divide-y divide-slate-100">
                     @foreach ($p->details as $d)
+                        @php
+                            $info = $sisaMap[$p->pemesanan_id][$d->barang_id] ?? [
+                                'pesan' => (float) $d->jumlah_pesan,
+                                'diterima' => 0,
+                                'sisa' => (float) $d->jumlah_pesan,
+                            ];
+                        @endphp
                         <tr>
                             <td class="px-5 py-3 text-slate-700">
                                 <span class="font-semibold text-slate-800">{{ $d->barang->nama_barang ?? '-' }}</span>
@@ -62,7 +76,9 @@
                             <td class="px-3 py-3 text-slate-700">{{ $d->supplier->nama_supplier ?? '-' }}</td>
                             <td class="px-3 py-3 text-slate-700">{{ $d->distributor->nama_supplier ?? '-' }}</td>
                             <td class="px-3 py-3 text-center text-slate-600">{{ $d->barang->textSatuan() ?? '-' }}</td>
-                            <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ rtrim(rtrim(number_format((float) $d->jumlah_pesan, 2, ',', '.'), '0'), ',') }}</td>
+                            <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ rtrim(rtrim(number_format($info['pesan'], 2, ',', '.'), '0'), ',') }}</td>
+                            <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ rtrim(rtrim(number_format($info['diterima'], 2, ',', '.'), '0'), ',') }}</td>
+                            <td class="px-3 py-3 text-right font-semibold tabular-nums {{ $info['sisa'] > 0 ? 'text-amber-600' : 'text-emerald-600' }}">{{ rtrim(rtrim(number_format($info['sisa'], 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ number_format((float) $d->harga_beli, 0, ',', '.') }}</td>
                             <td class="px-5 py-3 text-right font-semibold text-slate-800 tabular-nums">{{ number_format((float) $d->subtotal, 0, ',', '.') }}</td>
                         </tr>
@@ -70,7 +86,7 @@
                 </tbody>
                 <tfoot class="border-t border-slate-200 bg-slate-50/60">
                     <tr>
-                        <td colspan="6" class="px-5 py-2.5 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Total Nilai</td>
+                        <td colspan="8" class="px-5 py-2.5 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Total Nilai</td>
                         <td class="px-5 py-2.5 text-right text-sm font-bold text-slate-800 tabular-nums">Rp {{ number_format($p->details->sum('subtotal'), 0, ',', '.') }}</td>
                     </tr>
                 </tfoot>
@@ -81,7 +97,7 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
         <div class="flex flex-col items-center gap-2 py-12 text-slate-400">
             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            <p class="text-sm font-medium">Tidak ada pemesanan berstatus "Disetujui" yang siap diterima.</p>
+            <p class="text-sm font-medium">Tidak ada pemesanan berstatus "Disetujui" / "Proses Sebagian" yang siap diterima.</p>
         </div>
     </div>
 @endforelse

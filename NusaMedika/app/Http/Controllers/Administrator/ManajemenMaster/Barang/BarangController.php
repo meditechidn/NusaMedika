@@ -138,7 +138,7 @@ class BarangController extends Controller
 
     private function validated(Request $request)
     {
-        return array_merge([
+        $data = array_merge([
             'kode_barang' => null,
             'is_racikan' => 0,
             'is_fornas' => 0,
@@ -152,5 +152,18 @@ class BarangController extends Controller
             'is_fornas' => 'nullable|in:0,1,2',
             'kategori_barang' => 'nullable|in:0,1',
         ]));
+
+        // Racikan hanya berlaku untuk jenis barang "Obat"; selain itu dipaksa 0
+        // agar nilai yang tersembunyi di form tidak ikut tersimpan.
+        $jenisObatId = (int) (BarangJenis::aktif()
+            ->whereRaw('LOWER(BTRIM(nama_jenis_barang)) = ?', ['obat'])
+            ->orderBy('barang_jenis_id')
+            ->value('barang_jenis_id') ?? 0);
+
+        if ($jenisObatId === 0 || (int) $data['jenis_barang_id'] !== $jenisObatId) {
+            $data['is_racikan'] = 0;
+        }
+
+        return $data;
     }
 }

@@ -28,6 +28,7 @@ class Pemesanan extends Model
         1 => 'Disetujui',
         2 => 'Diterima',
         3 => 'Ditolak / Batal',
+        4 => 'Proses Sebagian',
     ];
 
     public function scopeAktif(Builder $query): Builder

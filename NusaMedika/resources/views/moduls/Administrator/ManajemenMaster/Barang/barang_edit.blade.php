@@ -61,7 +61,7 @@
                             class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
                         <option value="">-- Pilih Jenis Barang --</option>
                         @foreach ($barangJenisList as $jenis)
-                            <option value="{{ $jenis->barang_jenis_id }}" @selected((string) old('jenis_barang_id', $barang->jenis_barang_id) === (string) $jenis->barang_jenis_id)>{{ $jenis->nama_jenis_barang }}</option>
+                            <option value="{{ $jenis->barang_jenis_id }}" data-jenis="{{ strtolower(trim($jenis->nama_jenis_barang)) }}" @selected((string) old('jenis_barang_id', $barang->jenis_barang_id) === (string) $jenis->barang_jenis_id)>{{ $jenis->nama_jenis_barang }}</option>
                         @endforeach
                     </select>
                     @error('jenis_barang_id')
@@ -84,8 +84,8 @@
                     @enderror
                 </div>
 
-                <!-- Racikan -->
-                <div>
+                <!-- Racikan (hanya untuk jenis Obat) -->
+                <div id="racikan-field">
                     <label for="is_racikan" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Racikan</label>
                     <select id="is_racikan" name="is_racikan"
                             class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
@@ -141,3 +141,32 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var jenis = document.getElementById('jenis_barang_id');
+        var field = document.getElementById('racikan-field');
+        var racikan = document.getElementById('is_racikan');
+
+        if (!jenis || !field || !racikan) {
+            return;
+        }
+
+        function sinkronRacikan() {
+            var opsi = jenis.options[jenis.selectedIndex];
+            var jenisNama = opsi ? (opsi.getAttribute('data-jenis') || '').toLowerCase() : '';
+            var tampil = jenisNama === 'obat';
+
+            field.style.display = tampil ? '' : 'none';
+
+            if (!tampil) {
+                racikan.value = '0';
+            }
+        }
+
+        jenis.addEventListener('change', sinkronRacikan);
+        sinkronRacikan();
+    });
+</script>
+@endpush

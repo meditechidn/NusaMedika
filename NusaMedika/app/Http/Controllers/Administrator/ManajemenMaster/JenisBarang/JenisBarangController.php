@@ -7,6 +7,7 @@ use App\Models\BarangJenis;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class JenisBarangController extends Controller
 {
@@ -62,11 +63,11 @@ class JenisBarangController extends Controller
 
     public function update(Request $request, $jenisBarang)
     {
-        $data = $this->validated($request);
+        $jenisBarang = BarangJenis::findOrFail($jenisBarang);
+        $data = $this->validated($request, (int) $jenisBarang->barang_jenis_id);
 
         DB::beginTransaction();
         try {
-            $jenisBarang = BarangJenis::findOrFail($jenisBarang);
             $jenisBarang->nama_jenis_barang = $data['nama_jenis_barang'];
             $jenisBarang->mod_time = now();
             $jenisBarang->mod_user_id = Auth::id();
@@ -102,10 +103,27 @@ class JenisBarangController extends Controller
         }
     }
 
-    private function validated(Request $request)
+    private function validated(Request $request, ?int $ignoreId = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'nama_jenis_barang' => 'required|string|max:255',
         ]);
+
+        $nama = trim($data['nama_jenis_barang']);
+
+        $duplikat = BarangJenis::aktif()
+            ->where('nama_jenis_barang', 'ilike', $nama)
+            ->when($ignoreId !== null, fn ($q) => $q->where('barang_jenis_id', '!=', $ignoreId))
+            ->exists();
+
+        if ($duplikat) {
+            throw ValidationException::withMessages([
+                'nama_jenis_barang' => 'Nama jenis barang "'.$nama.'" sudah ada. Gunakan data yang sudah terdaftar.',
+            ]);
+        }
+
+        $data['nama_jenis_barang'] = $nama;
+
+        return $data;
     }
 }
