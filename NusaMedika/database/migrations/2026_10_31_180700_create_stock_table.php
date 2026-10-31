@@ -23,12 +23,11 @@ return new class extends Migration
             $table->string('no_batch', 50)->nullable();
             $table->integer('bagian_id');
             $table->decimal('jumlah', 18)->nullable()->default(0);
-            $table->decimal('harga_beli', 15)->nullable();
-            $table->decimal('harga_jual', 15)->nullable();
-            $table->date('tgl_expired')->nullable();
-            $table->integer('id_batch')->nullable();
+            $table->integer('id_batch');
+            $table->foreign(['id_batch'])->references(['id_batch'])->on('batch_barang')->onUpdate('no action')->onDelete('restrict');
         });
-        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS stock_barang_id_bagian_id_no_batch_harga_jual_unique ON stock (barang_id, bagian_id, no_batch, harga_jual) WHERE (status_batal IS NULL) OR (status_batal = 0)');
+
+        DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS stock_id_batch_bagian_id_unique ON stock (id_batch, bagian_id) WHERE (status_batal IS NULL) OR (status_batal = 0)');
     }
 
     /**
@@ -36,7 +35,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP INDEX IF EXISTS stock_barang_id_bagian_id_no_batch_harga_jual_unique');
+        DB::statement('DROP INDEX IF EXISTS stock_id_batch_bagian_id_unique');
+        DB::statement('DROP INDEX IF EXISTS stock_id_batch_bagian_id_unique');
         Schema::dropIfExists('stock');
     }
 };

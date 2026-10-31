@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\BatchBarang;
 use App\Models\KartuStock;
 use App\Models\Stock;
 use Illuminate\Support\Carbon;
@@ -34,21 +35,52 @@ class StockHelper
     {
         $hargaBeli = isset($opts['harga_beli']) ? (float) $opts['harga_beli'] : null;
         $hargaJual = isset($opts['harga_jual']) ? (float) $opts['harga_jual'] : null;
+        $tglExpired = $opts['tgl_expired'] ?? null;
+
+        // Cari/buat batch_barang (per barang + no_batch) untuk menyimpan harga.
+        $batch = BatchBarang::aktif()
+            ->where('barang_id', $barangId)
+            ->where('no_batch', $noBatch)
+            ->first();
+
+        if (! $batch) {
+            $batch = new BatchBarang;
+            $batch->barang_id = $barangId;
+            $batch->no_batch = $noBatch;
+            $batch->harga_beli = $hargaBeli ?? 0;
+            $batch->harga_jual = $hargaJual ?? 0;
+            $batch->tgl_expired = $tglExpired;
+            $batch->input_time = now();
+            $batch->input_user_id = Auth::id();
+            $batch->status_batal = 0;
+            $batch->save();
+        } else {
+            if ($hargaBeli !== null) {
+                $batch->harga_beli = $hargaBeli;
+            }
+            if ($hargaJual !== null) {
+                $batch->harga_jual = $hargaJual;
+            }
+            if ($tglExpired !== null) {
+                $batch->tgl_expired = $tglExpired;
+            }
+            $batch->mod_time = now();
+            $batch->mod_user_id = Auth::id();
+            $batch->save();
+        }
 
         $stock = Stock::aktif()
             ->where('barang_id', $barangId)
             ->where('bagian_id', $bagianId)
             ->where('no_batch', $noBatch)
-            ->where('harga_jual', $hargaJual)
+            ->where('id_batch', $batch->id_batch)
             ->first() ?? new Stock;
 
         if (! $stock->exists) {
             $stock->barang_id = $barangId;
             $stock->no_batch = $noBatch;
             $stock->bagian_id = $bagianId;
-            $stock->harga_beli = $hargaBeli;
-            $stock->harga_jual = $hargaJual;
-            $stock->tgl_expired = $opts['tgl_expired'] ?? null;
+            $stock->id_batch = $batch->id_batch;
             $stock->input_time = now();
             $stock->input_user_id = Auth::id();
             $stock->status_batal = 0;
@@ -61,7 +93,7 @@ class StockHelper
         $stock->mod_user_id = Auth::id();
         $stock->save();
 
-        self::tulisKartu($bagianId, $barangId, $noBatch, $masuk, $keluar, $sebelum, $sesudah, $opts, $hargaBeli, $hargaJual, $opts['tgl_expired'] ?? null);
+        self::tulisKartu($bagianId, $barangId, $noBatch, $masuk, $keluar, $sebelum, $sesudah, $opts, (float) $batch->harga_beli, (float) $batch->harga_jual, $tglExpired);
     }
 
     private static function tulisKartu(
@@ -144,9 +176,9 @@ class StockHelper
                 'jenis_mutasi' => KartuStock::JENIS_PENYESUAIAN,
                 'keterangan' => 'Stock Opname',
             ], $opts),
-            $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
-            $stock->harga_jual !== null ? (float) $stock->harga_jual : null,
-            $stock->tgl_expired ? substr((string) $stock->tgl_expired, 0, 10) : null,
+            $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
+            $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
+            $stock->batchBarang && $stock->batchBarang->tgl_expired ? substr((string) $stock->batchBarang->tgl_expired, 0, 10) : null,
         );
 
         return ['sebelum' => $sebelum, 'sesudah' => $fisik];
@@ -180,9 +212,9 @@ class StockHelper
                     'jenis_mutasi' => KartuStock::JENIS_PENYESUAIAN,
                     'keterangan' => 'Hapus stock (Stock Opname)',
                 ], $opts),
-                $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
-                $stock->harga_jual !== null ? (float) $stock->harga_jual : null,
-                $stock->tgl_expired ? substr((string) $stock->tgl_expired, 0, 10) : null,
+                $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
+                $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
+                $stock->batchBarang && $stock->batchBarang->tgl_expired ? substr((string) $stock->batchBarang->tgl_expired, 0, 10) : null,
             );
         }
 
@@ -213,10 +245,14 @@ class StockHelper
      */
     public static function sisaPerBatch(int $bagianId): array
     {
-        $rows = Stock::aktif()
-            ->where('bagian_id', $bagianId)
-            ->where('jumlah', '>', 0)
-            ->get(['barang_id', 'no_batch', 'jumlah', 'tgl_expired']);
+        $rows = Stock::query()
+            ->join('batch_barang', 'batch_barang.id_batch', '=', 'stock.id_batch')
+            ->where(function ($q) {
+                $q->whereNull('stock.status_batal')->orWhere('stock.status_batal', 0);
+            })
+            ->where('stock.bagian_id', $bagianId)
+            ->where('stock.jumlah', '>', 0)
+            ->get(['stock.barang_id', 'stock.no_batch', 'stock.jumlah', 'batch_barang.tgl_expired as tgl_expired']);
 
         $result = [];
         foreach ($rows as $row) {
@@ -282,12 +318,16 @@ class StockHelper
             return true;
         }
 
-        $expired = Stock::aktif()
-            ->where('bagian_id', $bagianId)
-            ->where('barang_id', $barangId)
-            ->where('no_batch', $noBatch)
-            ->whereNotNull('tgl_expired')
-            ->min('tgl_expired');
+        $expired = Stock::query()
+            ->join('batch_barang', 'batch_barang.id_batch', '=', 'stock.id_batch')
+            ->where(function ($q) {
+                $q->whereNull('stock.status_batal')->orWhere('stock.status_batal', 0);
+            })
+            ->where('stock.bagian_id', $bagianId)
+            ->where('stock.barang_id', $barangId)
+            ->where('stock.no_batch', $noBatch)
+            ->whereNotNull('batch_barang.tgl_expired')
+            ->min('batch_barang.tgl_expired');
 
         if ($expired === null) {
             return false;

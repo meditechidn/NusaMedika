@@ -23,7 +23,7 @@ class StockOpnameController extends Controller
         $bagianId = $request->input('bagian_id');
         $search = trim((string) $request->input('search'));
 
-        $query = Stock::aktif()->with(['barang' => fn ($b) => $b->with('satuan', 'jenis'), 'bagian']);
+        $query = Stock::aktif()->with(['barang' => fn ($b) => $b->with('satuan', 'jenis'), 'bagian', 'batchBarang']);
 
         if ($bagianId !== null && $bagianId !== '') {
             $query->where('bagian_id', (int) $bagianId);
@@ -39,7 +39,7 @@ class StockOpnameController extends Controller
         $stockList = $query->orderBy('bagian_id')
             ->orderBy('barang_id')
             ->orderBy('no_batch')
-            ->orderBy('harga_jual')
+            ->orderBy('id_batch')
             ->paginate(50)
             ->withQueryString();
 

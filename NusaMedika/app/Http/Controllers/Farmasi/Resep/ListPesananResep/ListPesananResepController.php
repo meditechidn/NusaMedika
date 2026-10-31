@@ -201,6 +201,7 @@ class ListPesananResepController extends Controller
                 }
 
                 $stock = Stock::aktif()
+                    ->with('batchBarang')
                     ->where('bagian_id', $depo->bagian_id)
                     ->where('barang_id', $detail->barang_id)
                     ->where('no_batch', $selectedBatch)
@@ -230,9 +231,9 @@ class ListPesananResepController extends Controller
                         'ref_peresepan_obat_detail_id' => $detail->peresepan_obat_detail_id,
                         'tanggal' => now(),
                         'keterangan' => 'Dispense Obat untuk resep '.$resep->no_resep,
-                        'harga_beli' => $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
-                        'harga_jual' => $stock->harga_jual !== null ? (float) $stock->harga_jual : null,
-                        'tgl_expired' => $stock->tgl_expired,
+                        'harga_beli' => $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
+                        'harga_jual' => $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
+                        'tgl_expired' => $stock->batchBarang?->tgl_expired,
                     ]
                 );
 

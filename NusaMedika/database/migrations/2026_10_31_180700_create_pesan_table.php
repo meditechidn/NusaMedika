@@ -11,23 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('forum_topik', function (Blueprint $table) {
-            $table->increments('topik_id');
-            $table->string('judul', 200);
+        Schema::create('pesan', function (Blueprint $table) {
+            $table->increments('pesan_id');
+            $table->integer('percakapan_id')->index();
+            $table->integer('pengirim_id');
             $table->text('isi');
-            $table->string('tipe', 20)->default('PUBLIK');
-            $table->integer('target_id')->nullable();
-            $table->integer('user_id');
-            $table->timestamp('terakhir_aktif_at', 6)->nullable();
+            $table->timestamp('dibaca_at', 6)->nullable();
             $table->timestamp('input_time', 6)->nullable();
             $table->integer('input_user_id')->nullable();
             $table->timestamp('mod_time', 6)->nullable();
             $table->integer('mod_user_id')->nullable();
             $table->smallInteger('status_batal')->nullable();
-
-            $table->index(['tipe', 'target_id']);
-
-            $table->foreign('user_id')->references('user_id')->on('users')->cascadeOnDelete();
+            $table->foreign(['pengirim_id'])->references(['user_id'])->on('users')->onUpdate('no action')->onDelete('cascade');
+            $table->foreign(['percakapan_id'])->references(['percakapan_id'])->on('percakapan')->onUpdate('no action')->onDelete('cascade');
         });
     }
 
@@ -36,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('forum_topik');
+        Schema::dropIfExists('pesan');
     }
 };

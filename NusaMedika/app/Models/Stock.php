@@ -19,9 +19,7 @@ class Stock extends Model
         'no_batch',
         'bagian_id',
         'jumlah',
-        'harga_beli',
-        'harga_jual',
-        'tgl_expired',
+        'id_batch',
     ];
 
     public function scopeAktif(Builder $query): Builder
@@ -39,5 +37,10 @@ class Stock extends Model
     public function bagian(): BelongsTo
     {
         return $this->belongsTo(Bagian::class, 'bagian_id', 'bagian_id');
+    }
+
+    public function batchBarang(): BelongsTo
+    {
+        return $this->belongsTo(BatchBarang::class, 'id_batch', 'id_batch');
     }
 }

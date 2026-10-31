@@ -59,6 +59,7 @@ return new class extends Migration
             $table->smallInteger('status_selesai')->default(0);
             $table->integer('registrasi_detail_id')->nullable()->index();
         });
+
         DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS billing_registrasi_detail_aktif_unique ON billing (registrasi_detail_id) WHERE (status_batal IS NULL) OR (status_batal = 0)');
     }
 
@@ -67,6 +68,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        DB::statement('DROP INDEX IF EXISTS billing_registrasi_detail_aktif_unique');
         DB::statement('DROP INDEX IF EXISTS billing_registrasi_detail_aktif_unique');
         Schema::dropIfExists('billing');
     }

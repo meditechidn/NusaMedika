@@ -82,9 +82,9 @@
                         <td class="px-3 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ $st->no_batch ?: '-' }}</span>
                         </td>
-                        <td class="px-3 py-3 text-slate-600 whitespace-nowrap">{{ $st->tgl_expired ? \Carbon\Carbon::parse($st->tgl_expired)->format('d-m-Y') : '-' }}</td>
-                        <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->harga_beli !== null ? 'Rp '.number_format((float) $st->harga_beli, 0, ',', '.') : '-' }}</td>
-                        <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->harga_jual !== null ? 'Rp '.number_format((float) $st->harga_jual, 0, ',', '.') : '-' }}</td>
+                        <td class="px-3 py-3 text-slate-600 whitespace-nowrap">{{ $st->batchBarang && $st->batchBarang->tgl_expired ? \Carbon\Carbon::parse($st->batchBarang->tgl_expired)->format('d-m-Y') : '-' }}</td>
+                        <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->batchBarang && $st->batchBarang->harga_beli !== null ? 'Rp '.number_format((float) $st->batchBarang->harga_beli, 0, ',', '.') : '-' }}</td>
+                        <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->batchBarang && $st->batchBarang->harga_jual !== null ? 'Rp '.number_format((float) $st->batchBarang->harga_jual, 0, ',', '.') : '-' }}</td>
                         <td class="px-3 py-3 text-right font-bold text-slate-800 tabular-nums">{{ rtrim(rtrim(number_format($jumlah, 2, ',', '.'), '0'), ',') }}</td>
                     </tr>
                 @empty

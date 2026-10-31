@@ -62,13 +62,14 @@ class TarifHelper
     public static function barang(int $barangId, ?string $noBatch = null, ?int $bagianId = null): array
     {
         $stock = DB::table('stock')
-            ->where('barang_id', $barangId)
-            ->when($noBatch, fn ($q) => $q->where('no_batch', $noBatch))
-            ->when($bagianId, fn ($q) => $q->where('bagian_id', $bagianId))
+            ->leftJoin('batch_barang', 'batch_barang.id_batch', '=', 'stock.id_batch')
+            ->where('stock.barang_id', $barangId)
+            ->when($noBatch, fn ($q) => $q->where('stock.no_batch', $noBatch))
+            ->when($bagianId, fn ($q) => $q->where('stock.bagian_id', $bagianId))
             ->where(function ($q) {
-                $q->whereNull('status_batal')->orWhere('status_batal', 0);
+                $q->whereNull('stock.status_batal')->orWhere('stock.status_batal', 0);
             })
-            ->orderByDesc('stock_id')
+            ->orderByDesc('stock.stock_id')
             ->first();
 
         return [

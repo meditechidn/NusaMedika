@@ -29,7 +29,7 @@ class MutasiBarangController extends Controller
         $bagianList = Bagian::aktif()->orderBy('nama_bagian')->get();
         $barangs = Barang::aktif()->with('satuan')->orderBy('nama_barang')->get();
         $batchStock = Stock::aktif()
-            ->with('barang')
+            ->with(['barang', 'batchBarang'])
             ->where('jumlah', '>', 0)
             ->get()
             ->map(fn ($s) => [
@@ -38,9 +38,9 @@ class MutasiBarangController extends Controller
                 'no_batch' => $s->no_batch,
                 'bagian_id' => $s->bagian_id,
                 'jumlah' => (float) $s->jumlah,
-                'harga_beli' => $s->harga_beli !== null ? (float) $s->harga_beli : null,
-                'harga_jual' => $s->harga_jual !== null ? (float) $s->harga_jual : null,
-                'tgl_expired' => $s->tgl_expired,
+                'harga_beli' => $s->batchBarang ? (float) $s->batchBarang->harga_beli : null,
+                'harga_jual' => $s->batchBarang ? (float) $s->batchBarang->harga_jual : null,
+                'tgl_expired' => $s->batchBarang?->tgl_expired,
             ])
             ->values();
 
@@ -200,9 +200,9 @@ class MutasiBarangController extends Controller
                 'barang_id' => (int) $barangId,
                 'no_batch' => $noBatch,
                 'jumlah' => $jumlah,
-                'harga_beli' => $stock->harga_beli !== null ? (float) $stock->harga_beli : null,
+                'harga_beli' => $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
                 'harga_jual' => $hargaJual,
-                'tgl_expired' => $stock->tgl_expired,
+                'tgl_expired' => $stock->batchBarang?->tgl_expired,
             ];
         }
 

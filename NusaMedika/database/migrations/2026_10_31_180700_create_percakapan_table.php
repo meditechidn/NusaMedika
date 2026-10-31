@@ -24,9 +24,8 @@ return new class extends Migration
             $table->smallInteger('status_batal')->nullable();
 
             $table->unique(['user_a_id', 'user_b_id']);
-
-            $table->foreign('user_a_id')->references('user_id')->on('users')->cascadeOnDelete();
-            $table->foreign('user_b_id')->references('user_id')->on('users')->cascadeOnDelete();
+            $table->foreign(['user_a_id'])->references(['user_id'])->on('users')->onUpdate('no action')->onDelete('cascade');
+            $table->foreign(['user_b_id'])->references(['user_id'])->on('users')->onUpdate('no action')->onDelete('cascade');
         });
     }
 

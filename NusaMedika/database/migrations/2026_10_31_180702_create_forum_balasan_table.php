@@ -21,9 +21,8 @@ return new class extends Migration
             $table->timestamp('mod_time', 6)->nullable();
             $table->integer('mod_user_id')->nullable();
             $table->smallInteger('status_batal')->nullable();
-
-            $table->foreign('topik_id')->references('topik_id')->on('forum_topik')->cascadeOnDelete();
-            $table->foreign('user_id')->references('user_id')->on('users')->cascadeOnDelete();
+            $table->foreign(['topik_id'])->references(['topik_id'])->on('forum_topik')->onUpdate('no action')->onDelete('cascade');
+            $table->foreign(['user_id'])->references(['user_id'])->on('users')->onUpdate('no action')->onDelete('cascade');
         });
     }
 

@@ -81,7 +81,7 @@
                                         <option value="{{ $s->no_batch }}||{{ $s->harga_jual ?? '' }}" @selected(old('no_batch.'.$d->peresepan_obat_detail_id) === $s->no_batch)>
                                             {{ $s->no_batch }} (stok {{ rtrim(rtrim(number_format((float) $s->jumlah, 2, ',', '.'), '0'), ',') }})
                                             @if ($s->harga_jual !== null) - Harga Jual Rp {{ number_format((float) $s->harga_jual, 0, ',', '.') }} @endif
-                                            @if ($s->tgl_expired) - Exp {{ $s->tgl_expired }} @endif
+                                            @if ($s->batchBarang && $s->batchBarang->tgl_expired) - Exp {{ $s->batchBarang->tgl_expired }} @endif
                                         </option>
                                     @empty
                                         <option value="" disabled>Stok tidak tersedia</option>

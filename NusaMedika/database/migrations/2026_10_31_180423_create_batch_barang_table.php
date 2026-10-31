@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('no_batch')->index();
             $table->decimal('harga_beli', 15)->default(0);
             $table->decimal('harga_jual', 15)->default(0);
+            $table->date('tgl_expired')->nullable();
 
             $table->index(['id_batch']);
         });
