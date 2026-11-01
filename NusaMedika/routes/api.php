@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\ApiBagianController;
 use App\Http\Controllers\API\ApiBarangController;
 use App\Http\Controllers\API\ApiIcdController;
 use App\Http\Controllers\API\ApiNasabahController;
@@ -18,4 +19,5 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/nasabah/search', [ApiNasabahController::class, 'searchNasabah'])->name('api.nasabah.search');
     Route::get('/pegawai/search', [ApiPegawaiController::class, 'searchPegawai'])->name('api.pegawai.search');
     Route::get('/barang/search', [ApiBarangController::class, 'searchBarang'])->name('api.barang.search');
+    Route::get('bagian/search', [ApiBagianController::class, 'searchBagian'])->name('api.search.bagian');
 });

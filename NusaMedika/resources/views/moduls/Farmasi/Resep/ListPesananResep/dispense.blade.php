@@ -75,10 +75,10 @@
                                 @endif
                             </td>
                             <td class="px-3 py-3">
-                                <select name="no_batch[{{ $d->peresepan_obat_detail_id }}]" class="batch-select text-sm w-full border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 outline-none text-slate-700" style="min-width: 200px;">
+                                <select name="id_batch[{{ $d->peresepan_obat_detail_id }}]" class="batch-select text-sm w-full border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 outline-none text-slate-700" style="min-width: 200px;">
                                     <option value="">-- Pilih Batch / Lewati --</option>
                                     @forelse ($available as $s)
-                                        <option value="{{ $s->no_batch }}||{{ $s->harga_jual ?? '' }}" @selected(old('no_batch.'.$d->peresepan_obat_detail_id) === $s->no_batch)>
+                                        <option value="{{ $s->id_batch }}" @selected(old('id_batch.'.$d->peresepan_obat_detail_id) == $s->id_batch)>
                                             {{ $s->no_batch }} (stok {{ rtrim(rtrim(number_format((float) $s->jumlah, 2, ',', '.'), '0'), ',') }})
                                             @if ($s->harga_jual !== null) - Harga Jual Rp {{ number_format((float) $s->harga_jual, 0, ',', '.') }} @endif
                                             @if ($s->batchBarang && $s->batchBarang->tgl_expired) - Exp {{ $s->batchBarang->tgl_expired }} @endif

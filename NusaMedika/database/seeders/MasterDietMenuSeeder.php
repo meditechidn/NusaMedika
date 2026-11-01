@@ -31,7 +31,7 @@ class MasterDietMenuSeeder extends Seeder
             ['menu_id' => 6],
             [
                 'nama_menu' => 'Manajemen Master',
-                'modul_id' => 1,
+                'modul_id' => 5,
                 'urutan_menu' => 1,
                 'input_time' => $now,
                 'input_user_id' => 1,

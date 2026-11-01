@@ -19,12 +19,12 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
                 <label for="bagian_id" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bagian / Gudang</label>
-                <select id="bagian_id" name="bagian_id" class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
-                    <option value="">-- Semua Bagian --</option>
-                    @foreach ($bagianList as $b)
-                        <option value="{{ $b->bagian_id }}" @selected((string) old('bagian_id', $bagianId) === (string) $b->bagian_id)>{{ $b->nama_bagian }}</option>
-                    @endforeach
-                </select>
+                <x-select_ajax
+                    name="bagian_id"
+                    id="bagian_id"
+                    required="true"
+                    url="/api/bagian/search"
+                ></x-select_ajax>
             </div>
             <div class="col-span-1 md:col-span-2">
                 <label for="search" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Pencarian</label>
@@ -60,6 +60,7 @@
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Satuan</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bagian</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">No. Batch</th>
+                    <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Batch ID</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tgl Expired</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Harga Beli</th>
                     <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Harga Jual</th>
@@ -82,6 +83,7 @@
                         <td class="px-3 py-3">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ $st->no_batch ?: '-' }}</span>
                         </td>
+                        <td class="px-3 py-3 text-center text-slate-600 tabular-nums">{{ $st->id_batch ?? '-' }}</td>
                         <td class="px-3 py-3 text-slate-600 whitespace-nowrap">{{ $st->batchBarang && $st->batchBarang->tgl_expired ? \Carbon\Carbon::parse($st->batchBarang->tgl_expired)->format('d-m-Y') : '-' }}</td>
                         <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->batchBarang && $st->batchBarang->harga_beli !== null ? 'Rp '.number_format((float) $st->batchBarang->harga_beli, 0, ',', '.') : '-' }}</td>
                         <td class="px-3 py-3 text-right text-slate-700 tabular-nums">{{ $st->batchBarang && $st->batchBarang->harga_jual !== null ? 'Rp '.number_format((float) $st->batchBarang->harga_jual, 0, ',', '.') : '-' }}</td>
@@ -89,7 +91,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="px-3 py-12 text-center">
+                        <td colspan="12" class="px-3 py-12 text-center">
                             <div class="flex flex-col items-center gap-2 text-slate-400">
                                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                                 <p class="text-sm font-medium">Belum ada data stock.</p>

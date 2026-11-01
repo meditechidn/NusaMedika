@@ -181,7 +181,7 @@
             sel.appendChild(ph);
             opts.forEach(function (o) {
                 var opt = document.createElement('option');
-                opt.value = o.no_batch + '||' + (o.harga_jual === null ? '' : o.harga_jual);
+                opt.value = o.id_batch;
                 var label = o.no_batch + ' (stok ' + Number(o.jumlah).toLocaleString('id-ID') + ')';
                 if (o.harga_jual !== null) label += ' - Harga Jual Rp ' + Number(o.harga_jual).toLocaleString('id-ID');
                 if (o.tgl_expired) label += ' - Exp ' + o.tgl_expired;
@@ -201,7 +201,7 @@
                 '</td>',
                 '<td class="px-3 py-2 align-top text-center"><span class="text-satuan text-xs text-slate-600">-</span></td>',
                 '<td class="px-3 py-2 align-top">',
-                '   <select name="no_batch[]" class="batch-select text-sm w-full border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 outline-none text-slate-700" style="min-width:150px;"></select>',
+                '   <select name="id_batch[]" class="batch-select text-sm w-full border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 outline-none text-slate-700" style="min-width:150px;"></select>',
                 '</td>',
                 '<td class="px-3 py-2 align-top">',
                 '   <input type="number" name="jumlah[]" min="1" step="any" value="1" class="inp-jumlah text-sm w-full text-right border border-slate-200 rounded-lg px-2.5 py-2 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" style="min-width:90px;">',

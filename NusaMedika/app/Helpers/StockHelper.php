@@ -16,9 +16,9 @@ class StockHelper
      *
      * @param  array{jenis_mutasi?: int, ref_penerimaan_detail_id?: int|null, ref_mutasi_barang_detail_id?: int|null, ref_peresepan_obat_detail_id?: int|null, tanggal?: \DateTimeInterface|Carbon|null, keterangan?: string|null, harga_beli?: float|null, harga_jual?: float|null, tgl_expired?: string|null}  $opts
      */
-    public static function tambahMasuk(int $bagianId, int $barangId, ?string $noBatch, float $qty, array $opts = []): void
+    public static function tambahMasuk(int $bagianId, int $barangId, ?string $noBatch, float $qty, array $opts = []): array
     {
-        self::catat($bagianId, $barangId, $noBatch, $qty, 0, $opts);
+        return self::catat($bagianId, $barangId, $noBatch, $qty, 0, $opts);
     }
 
     /**
@@ -26,24 +26,25 @@ class StockHelper
      *
      * @param  array{jenis_mutasi?: int, ref_penerimaan_detail_id?: int|null, ref_mutasi_barang_detail_id?: int|null, ref_peresepan_obat_detail_id?: int|null, tanggal?: \DateTimeInterface|Carbon|null, keterangan?: string|null, harga_beli?: float|null, harga_jual?: float|null, tgl_expired?: string|null}  $opts
      */
-    public static function tambahKeluar(int $bagianId, int $barangId, ?string $noBatch, float $qty, array $opts = []): void
+    public static function tambahKeluar(int $bagianId, int $barangId, ?string $noBatch, float $qty, array $opts = []): array
     {
-        self::catat($bagianId, $barangId, $noBatch, 0, $qty, $opts);
+        return self::catat($bagianId, $barangId, $noBatch, 0, $qty, $opts);
     }
 
-    private static function catat(int $bagianId, int $barangId, ?string $noBatch, float $masuk, float $keluar, array $opts): void
+    private static function catat(int $bagianId, int $barangId, ?string $noBatch, float $masuk, float $keluar, array $opts): array
     {
         $hargaBeli = isset($opts['harga_beli']) ? (float) $opts['harga_beli'] : null;
         $hargaJual = isset($opts['harga_jual']) ? (float) $opts['harga_jual'] : null;
         $tglExpired = $opts['tgl_expired'] ?? null;
+        $buatBatchBaru = (bool) ($opts['buat_batch_baru'] ?? false);
+        $idBatchOpt = isset($opts['id_batch']) ? (int) $opts['id_batch'] : null;
 
-        // Cari/buat batch_barang (per barang + no_batch) untuk menyimpan harga.
-        $batch = BatchBarang::aktif()
-            ->where('barang_id', $barangId)
-            ->where('no_batch', $noBatch)
-            ->first();
-
-        if (! $batch) {
+        if ($idBatchOpt) {
+            $batch = BatchBarang::aktif()->find($idBatchOpt);
+            if (! $batch) {
+                throw new InvalidArgumentException('Batch dengan id_batch '.$idBatchOpt.' tidak ditemukan.');
+            }
+        } elseif ($buatBatchBaru) {
             $batch = new BatchBarang;
             $batch->barang_id = $barangId;
             $batch->no_batch = $noBatch;
@@ -51,38 +52,64 @@ class StockHelper
             $batch->harga_jual = $hargaJual ?? 0;
             $batch->tgl_expired = $tglExpired;
             $batch->input_time = now();
-            $batch->input_user_id = Auth::id();
+            $batch->input_user_id = Auth::id() ?? 1;
             $batch->status_batal = 0;
             $batch->save();
         } else {
-            if ($hargaBeli !== null) {
-                $batch->harga_beli = $hargaBeli;
-            }
-            if ($hargaJual !== null) {
-                $batch->harga_jual = $hargaJual;
-            }
-            if ($tglExpired !== null) {
+            // Kompatibilitas lama: cari batch aktif berdasarkan barang + no_batch.
+            // Jika tgl_expired ikut diberikan dan berbeda, buat batch baru agar
+            // expired date lama tidak tertimpa.
+            $batch = BatchBarang::aktif()
+                ->where('barang_id', $barangId)
+                ->where('no_batch', $noBatch)
+                ->when($tglExpired !== null, function ($q) use ($tglExpired) {
+                    $q->where(function ($q2) use ($tglExpired) {
+                        $q2->whereNull('tgl_expired')->orWhere('tgl_expired', $tglExpired);
+                    });
+                })
+                ->orderByDesc('id_batch')
+                ->first();
+
+            if (! $batch || ($tglExpired !== null && $batch->tgl_expired !== null && substr((string) $batch->tgl_expired, 0, 10) !== substr((string) $tglExpired, 0, 10))) {
+                $batch = new BatchBarang;
+                $batch->barang_id = $barangId;
+                $batch->no_batch = $noBatch;
+                $batch->harga_beli = $hargaBeli ?? 0;
+                $batch->harga_jual = $hargaJual ?? 0;
                 $batch->tgl_expired = $tglExpired;
+                $batch->input_time = now();
+                $batch->input_user_id = Auth::id() ?? 1;
+                $batch->status_batal = 0;
+                $batch->save();
+            } else {
+                if ($hargaBeli !== null) {
+                    $batch->harga_beli = $hargaBeli;
+                }
+                if ($hargaJual !== null) {
+                    $batch->harga_jual = $hargaJual;
+                }
+                if ($tglExpired !== null) {
+                    $batch->tgl_expired = $tglExpired;
+                }
+                $batch->mod_time = now();
+                $batch->mod_user_id = Auth::id() ?? 1;
+                $batch->save();
             }
-            $batch->mod_time = now();
-            $batch->mod_user_id = Auth::id();
-            $batch->save();
         }
 
         $stock = Stock::aktif()
-            ->where('barang_id', $barangId)
-            ->where('bagian_id', $bagianId)
-            ->where('no_batch', $noBatch)
             ->where('id_batch', $batch->id_batch)
-            ->first() ?? new Stock;
+            ->where('bagian_id', $bagianId)
+            ->first();
 
-        if (! $stock->exists) {
+        if (! $stock) {
+            $stock = new Stock;
             $stock->barang_id = $barangId;
             $stock->no_batch = $noBatch;
             $stock->bagian_id = $bagianId;
             $stock->id_batch = $batch->id_batch;
             $stock->input_time = now();
-            $stock->input_user_id = Auth::id();
+            $stock->input_user_id = Auth::id() ?? 1;
             $stock->status_batal = 0;
         }
 
@@ -90,10 +117,30 @@ class StockHelper
         $sesudah = $sebelum + $masuk - $keluar;
         $stock->jumlah = $sesudah;
         $stock->mod_time = now();
-        $stock->mod_user_id = Auth::id();
+        $stock->mod_user_id = Auth::id() ?? 1;
         $stock->save();
 
-        self::tulisKartu($bagianId, $barangId, $noBatch, $masuk, $keluar, $sebelum, $sesudah, $opts, (float) $batch->harga_beli, (float) $batch->harga_jual, $tglExpired);
+        self::tulisKartu(
+            $bagianId,
+            $barangId,
+            $noBatch,
+            $masuk,
+            $keluar,
+            $sebelum,
+            $sesudah,
+            $opts,
+            (float) $batch->harga_beli,
+            (float) $batch->harga_jual,
+            $batch->tgl_expired ? substr((string) $batch->tgl_expired, 0, 10) : null,
+            (int) $batch->id_batch,
+        );
+
+        return [
+            'id_batch' => (int) $batch->id_batch,
+            'stock_id' => (int) $stock->stock_id,
+            'sebelum' => $sebelum,
+            'sesudah' => $sesudah,
+        ];
     }
 
     private static function tulisKartu(
@@ -108,10 +155,12 @@ class StockHelper
         ?float $hargaBeli = null,
         ?float $hargaJual = null,
         ?string $tglExpired = null,
+        ?int $idBatch = null,
     ): void {
         $kartu = new KartuStock;
         $kartu->barang_id = $barangId;
         $kartu->no_batch = $noBatch;
+        $kartu->id_batch = $idBatch;
         $kartu->bagian_id = $bagianId;
         $kartu->tanggal = $opts['tanggal'] ?? now();
         $kartu->jenis_mutasi = $opts['jenis_mutasi'] ?? ($masuk > 0 ? 1 : 3);
@@ -179,6 +228,7 @@ class StockHelper
             $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
             $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
             $stock->batchBarang && $stock->batchBarang->tgl_expired ? substr((string) $stock->batchBarang->tgl_expired, 0, 10) : null,
+            $stock->id_batch !== null ? (int) $stock->id_batch : null,
         );
 
         return ['sebelum' => $sebelum, 'sesudah' => $fisik];
@@ -215,6 +265,7 @@ class StockHelper
                 $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
                 $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
                 $stock->batchBarang && $stock->batchBarang->tgl_expired ? substr((string) $stock->batchBarang->tgl_expired, 0, 10) : null,
+                $stock->id_batch !== null ? (int) $stock->id_batch : null,
             );
         }
 

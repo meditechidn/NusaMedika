@@ -23,19 +23,26 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div id="field-barang">
                 <label for="barang_id" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Barang</label>
                 <select id="barang_id" name="barang_id" class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
-                    <option value="">-- Semua Barang --</option>
                     @foreach ($barangList as $b)
                         <option value="{{ $b->barang_id }}" @selected((string) old('barang_id', $barangId) === (string) $b->barang_id)>{{ $b->nama_barang }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div id="field-jenis-barang">
+                <label for="jenis_barang_id" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Jenis Barang</label>
+                <select id="jenis_barang_id" name="jenis_barang_id" class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
+                    <option value="">-- Semua Jenis --</option>
+                    @foreach ($jenisBarangList as $jb)
+                        <option value="{{ $jb->barang_jenis_id }}" @selected((string) old('jenis_barang_id', $jenisBarangId) === (string) $jb->barang_jenis_id)>{{ $jb->nama_jenis_barang }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
                 <label for="bagian_id" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bagian</label>
                 <select id="bagian_id" name="bagian_id" class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
-                    <option value="">-- Semua Bagian --</option>
                     @foreach ($bagianList as $b)
                         <option value="{{ $b->bagian_id }}" @selected((string) old('bagian_id', $bagianId) === (string) $b->bagian_id)>{{ $b->nama_bagian }}</option>
                     @endforeach
@@ -54,6 +61,10 @@
         </div>
         <div class="flex justify-end gap-2 mt-4">
             <a href="{{ route('kartu_stock.index') }}" class="inline-flex items-center justify-center bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors">Reset</a>
+            <a href="{{ route('kartu_stock.cetak') . '?' . http_build_query(request()->query()) }}" target="_blank" class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-all hover:-translate-y-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak
+            </a>
             <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 px-6 rounded-lg shadow-sm shadow-blue-600/20 transition-all hover:-translate-y-0.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 Cari Data
@@ -105,8 +116,6 @@
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tanggal</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bagian</th>
-                        <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">No. Batch</th>
-                        <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tgl Expired</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Jenis Mutasi</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Stock Awal</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Masuk</th>
@@ -137,10 +146,6 @@
                             <td class="px-3 py-3 text-slate-600 whitespace-nowrap">{{ \Carbon\Carbon::parse($k->tanggal)->format('d-m-Y') }}</td>
                             <td class="px-3 py-3 font-semibold text-slate-800">{{ $k->barang->nama_barang ?? '-' }}</td>
                             <td class="px-3 py-3 text-slate-600">{{ $k->bagian->nama_bagian ?? '-' }}</td>
-                            <td class="px-3 py-3">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ $k->no_batch ?: '-' }}</span>
-                            </td>
-                            <td class="px-3 py-3 text-slate-600 whitespace-nowrap">{{ $k->tgl_expired ? \Carbon\Carbon::parse($k->tgl_expired)->format('d-m-Y') : '-' }}</td>
                             <td class="px-3 py-3 text-center">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $badge }}">{{ $k->jenis_label }}</span>
                             </td>
@@ -152,7 +157,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="px-3 py-12 text-center">
+                            <td colspan="10" class="px-3 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2 text-slate-400">
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h2m-2 4h2m-6-4h.01M6 13h.01"></path></svg>
                                     <p class="text-sm font-medium">Belum ada riwayat kartu stock.</p>
@@ -171,6 +176,7 @@
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Satuan</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">No. Batch</th>
+                        <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Stock Awal</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Total Masuk</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Total Keluar</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Stock Akhir</th>
@@ -180,7 +186,7 @@
                     @forelse ($kartuList as $i => $k)
                         @php
                             $noUrut = ($kartuList->firstItem() ?? 0) + $i;
-                            $saldo = (float) $k->tot_masuk - (float) $k->tot_keluar;
+                            $saldo = (float) ($k->stock_awal ?? 0) + (float) $k->tot_masuk - (float) $k->tot_keluar;
                         @endphp
                         <tr class="hover:bg-blue-50/40 transition-colors">
                             <td class="px-3 py-3 text-center text-slate-500">{{ $noUrut }}</td>
@@ -190,13 +196,14 @@
                             <td class="px-3 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ $k->no_batch ?: '-' }}</span>
                             </td>
+                            <td class="px-3 py-3 text-right text-slate-600 tabular-nums">{{ rtrim(rtrim(number_format((float) ($k->stock_awal ?? 0), 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right text-emerald-600 font-semibold tabular-nums">{{ rtrim(rtrim(number_format((float) $k->tot_masuk, 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right text-red-600 font-semibold tabular-nums">{{ rtrim(rtrim(number_format((float) $k->tot_keluar, 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right font-bold text-slate-800 tabular-nums">{{ rtrim(rtrim(number_format($saldo, 2, ',', '.'), '0'), ',') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-3 py-12 text-center">
+                            <td colspan="9" class="px-3 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2 text-slate-400">
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h2m-2 4h2m-6-4h.01M6 13h.01"></path></svg>
                                     <p class="text-sm font-medium">Belum ada ringkasan kartu stock.</p>
@@ -215,6 +222,7 @@
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Satuan</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Jumlah Batch</th>
+                        <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Stock Awal</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Total Masuk</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Total Keluar</th>
                         <th class="px-3 py-3 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Stock Akhir</th>
@@ -224,7 +232,7 @@
                     @forelse ($kartuList as $i => $k)
                         @php
                             $noUrut = ($kartuList->firstItem() ?? 0) + $i;
-                            $saldo = (float) $k->tot_masuk - (float) $k->tot_keluar;
+                            $saldo = (float) ($k->stock_awal ?? 0) + (float) $k->tot_masuk - (float) $k->tot_keluar;
                         @endphp
                         <tr class="hover:bg-blue-50/40 transition-colors">
                             <td class="px-3 py-3 text-center text-slate-500">{{ $noUrut }}</td>
@@ -234,13 +242,14 @@
                             <td class="px-3 py-3 text-center">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">{{ $k->jumlah_batch }}</span>
                             </td>
+                            <td class="px-3 py-3 text-right text-slate-600 tabular-nums">{{ rtrim(rtrim(number_format((float) ($k->stock_awal ?? 0), 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right text-emerald-600 font-semibold tabular-nums">{{ rtrim(rtrim(number_format((float) $k->tot_masuk, 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right text-red-600 font-semibold tabular-nums">{{ rtrim(rtrim(number_format((float) $k->tot_keluar, 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-3 text-right font-bold text-slate-800 tabular-nums">{{ rtrim(rtrim(number_format($saldo, 2, ',', '.'), '0'), ',') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-3 py-12 text-center">
+                            <td colspan="9" class="px-3 py-12 text-center">
                                 <div class="flex flex-col items-center gap-2 text-slate-400">
                                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h2m-2 4h2m-6-4h.01M6 13h.01"></path></svg>
                                     <p class="text-sm font-medium">Belum ada data rekapitulasi kartu stock.</p>
@@ -265,4 +274,24 @@
     </div>
 </div>
 @endif
+
+<script>
+(function () {
+    var jenis = document.getElementById('jenis');
+    var fieldBarang = document.getElementById('field-barang');
+    var fieldJenis = document.getElementById('field-jenis-barang');
+    var REKAP = 'rekapitulasi_summary_kartu_stock';
+
+    function toggle() {
+        var isRekap = jenis && jenis.value === REKAP;
+        if (fieldBarang) fieldBarang.style.display = isRekap ? 'none' : '';
+        if (fieldJenis) fieldJenis.style.display = isRekap ? '' : 'none';
+    }
+
+    if (jenis) {
+        jenis.addEventListener('change', toggle);
+        toggle();
+    }
+})();
+</script>
 @endsection

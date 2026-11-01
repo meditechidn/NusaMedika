@@ -36,13 +36,12 @@
                 <!-- Bagian / Gudang Tujuan -->
                 <div>
                     <label for="bagian_id" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bagian / Gudang Tujuan</label>
-                    <select id="bagian_id" name="bagian_id"
-                            class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700">
-                        <option value="">-- Pilih Bagian / Gudang --</option>
-                        @foreach ($gudangs as $g)
-                            <option value="{{ $g->bagian_id }}" @selected((string) old('bagian_id') === (string) $g->bagian_id)>{{ $g->nama_bagian }}</option>
-                        @endforeach
-                    </select>
+                    <x-select_ajax
+                        name="bagian_id"
+                        id="bagian_id"
+                        required="true"
+                        url="/api/bagian/search"
+                    ></x-select_ajax>
                     @error('bagian_id')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror

@@ -34,6 +34,7 @@ class MutasiBarangController extends Controller
             ->get()
             ->map(fn ($s) => [
                 'barang_id' => $s->barang_id,
+                'id_batch' => $s->id_batch,
                 'barang' => $s->barang?->nama_barang ?? '-',
                 'no_batch' => $s->no_batch,
                 'bagian_id' => $s->bagian_id,
@@ -99,6 +100,7 @@ class MutasiBarangController extends Controller
                     $item['no_batch'],
                     (float) $item['jumlah'],
                     [
+                        'id_batch' => $item['id_batch'],
                         'jenis_mutasi' => $adaTujuan ? 3 : 4,
                         'ref_mutasi_barang_detail_id' => $detail->mutasi_barang_detail_id,
                         'tanggal' => $mutasi->tanggal_mutasi,
@@ -116,6 +118,7 @@ class MutasiBarangController extends Controller
                         $item['no_batch'],
                         (float) $item['jumlah'],
                         [
+                            'id_batch' => $item['id_batch'],
                             'jenis_mutasi' => 2,
                             'ref_mutasi_barang_detail_id' => $detail->mutasi_barang_detail_id,
                             'tanggal' => $mutasi->tanggal_mutasi,
@@ -156,7 +159,7 @@ class MutasiBarangController extends Controller
     {
         $barangIds = (array) $request->input('barang_id', []);
         $jumlahs = (array) $request->input('jumlah', []);
-        $batches = (array) $request->input('no_batch', []);
+        $batchIds = (array) $request->input('id_batch', []);
 
         $items = [];
         foreach ($barangIds as $i => $barangId) {
@@ -169,39 +172,31 @@ class MutasiBarangController extends Controller
                 continue;
             }
 
-            $batchSel = trim((string) ($batches[$i] ?? ''));
-            $noBatch = $batchSel;
-            $hargaJual = null;
-
-            if (str_contains($batchSel, '||')) {
-                [$noBatch, $hargaPart] = explode('||', $batchSel, 2);
-                $noBatch = trim($noBatch);
-                $hargaJual = $hargaPart === '' ? null : (float) $hargaPart;
-            }
-
-            if ($noBatch === '') {
+            $idBatch = (int) ($batchIds[$i] ?? 0);
+            if ($idBatch <= 0) {
                 throw new \RuntimeException('No. batch wajib dipilih untuk barang #'.(int) $barangId.'.');
             }
 
             $stock = Stock::aktif()
+                ->with('batchBarang')
+                ->where('id_batch', $idBatch)
                 ->where('barang_id', (int) $barangId)
                 ->where('bagian_id', (int) $bagianAsalId)
-                ->where('no_batch', $noBatch)
-                ->where('harga_jual', $hargaJual)
                 ->first();
 
             if (! $stock || (float) $stock->jumlah < $jumlah) {
                 $barang = Barang::find((int) $barangId);
 
-                throw new \RuntimeException('Stock batch '.$noBatch.' tidak mencukupi untuk '.($barang->nama_barang ?? '#'.(int) $barangId).'.');
+                throw new \RuntimeException('Stock batch tidak mencukupi untuk '.($barang->nama_barang ?? '#'.(int) $barangId).'.');
             }
 
             $items[] = [
                 'barang_id' => (int) $barangId,
-                'no_batch' => $noBatch,
+                'id_batch' => (int) $stock->id_batch,
+                'no_batch' => (string) $stock->no_batch,
                 'jumlah' => $jumlah,
                 'harga_beli' => $stock->batchBarang ? (float) $stock->batchBarang->harga_beli : null,
-                'harga_jual' => $hargaJual,
+                'harga_jual' => $stock->batchBarang ? (float) $stock->batchBarang->harga_jual : null,
                 'tgl_expired' => $stock->batchBarang?->tgl_expired,
             ];
         }

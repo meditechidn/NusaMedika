@@ -171,7 +171,7 @@ class ListPesananResepController extends Controller
             return back()->with('error', 'Resep '.$resep->no_resep.' sudah diproses.');
         }
 
-        $batchSel = (array) $request->input('no_batch', []);
+        $batchSel = (array) $request->input('id_batch', []);
         $jumlahSel = (array) $request->input('jumlah_dispense', []);
         $selesai = (bool) $request->input('selesai', false);
         $statusAwal = (int) $resep->status_resep;
@@ -195,22 +195,24 @@ class ListPesananResepController extends Controller
                     throw new \RuntimeException('Jumlah dispense tidak valid untuk "'.($detail->barang->nama_barang ?? '#'.$detail->barang_id).'".');
                 }
 
-                if (str_contains($selectedBatch, '||')) {
-                    [$selectedBatch, $hargaPart] = explode('||', $selectedBatch, 2);
-                    $selectedBatch = trim($selectedBatch);
+                $idBatch = (int) $selectedBatch;
+                if ($idBatch <= 0) {
+                    continue;
                 }
 
                 $stock = Stock::aktif()
                     ->with('batchBarang')
                     ->where('bagian_id', $depo->bagian_id)
                     ->where('barang_id', $detail->barang_id)
-                    ->where('no_batch', $selectedBatch)
+                    ->where('id_batch', $idBatch)
                     ->where('jumlah', '>', 0)
                     ->first();
 
                 if (! $stock || (float) $stock->jumlah < $jumlah) {
-                    throw new \RuntimeException('Stock batch '.$selectedBatch.' tidak mencukupi untuk "'.($detail->barang->nama_barang ?? '#'.$detail->barang_id).'".');
+                    throw new \RuntimeException('Stock batch tidak mencukupi untuk "'.($detail->barang->nama_barang ?? '#'.$detail->barang_id).'".');
                 }
+
+                $selectedBatch = (string) $stock->no_batch;
 
                 $detail->flag_dispense = 1;
                 $detail->jumlah_dispense = (float) ($detail->jumlah_dispense ?? 0) + $jumlah;
@@ -227,6 +229,7 @@ class ListPesananResepController extends Controller
                     $selectedBatch,
                     $jumlah,
                     [
+                        'id_batch' => $idBatch,
                         'jenis_mutasi' => 5,
                         'ref_peresepan_obat_detail_id' => $detail->peresepan_obat_detail_id,
                         'tanggal' => now(),

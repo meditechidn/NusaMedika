@@ -37,8 +37,8 @@
 
                 <!-- No Faktur -->
                 <div>
-                    <label for="no_faktur" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">No. Faktur</label>
-                    <input type="text" id="no_faktur" name="no_faktur" value="{{ old('no_faktur') }}" placeholder="Contoh: INV-2026-0001"
+                    <label for="no_faktur" class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">No. Faktur <span class="text-red-500">*</span></label>
+                    <input type="text" id="no_faktur" name="no_faktur" value="{{ old('no_faktur') }}" placeholder="Contoh: INV-2026-0001" required
                            class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-slate-700 placeholder-slate-400">
                     @error('no_faktur')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>

@@ -17,6 +17,7 @@ class KartuStock extends Model
     protected $fillable = [
         'barang_id',
         'no_batch',
+        'id_batch',
         'bagian_id',
         'tanggal',
         'jenis_mutasi',
@@ -73,6 +74,11 @@ class KartuStock extends Model
     public function bagian(): BelongsTo
     {
         return $this->belongsTo(Bagian::class, 'bagian_id', 'bagian_id');
+    }
+
+    public function batchBarang(): BelongsTo
+    {
+        return $this->belongsTo(BatchBarang::class, 'id_batch', 'id_batch');
     }
 
     public function penerimaanDetail(): BelongsTo

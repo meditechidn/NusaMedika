@@ -122,6 +122,7 @@ class PenerimaanBarangController extends Controller
                         'harga_beli' => $item['harga_beli'],
                         'harga_jual' => $item['harga_jual'],
                         'tgl_expired' => $item['tgl_expired'],
+                        'buat_batch_baru' => true,
                     ]
                 );
             }
@@ -151,6 +152,17 @@ class PenerimaanBarangController extends Controller
         }
     }
 
+    public function cetak($penerimaan)
+    {
+        $penerimaan = Penerimaan::with([
+            'pemesanan',
+            'bagian',
+            'details' => fn ($q) => $q->aktif()->with(['barang.satuan', 'supplier', 'distributor']),
+        ])->findOrFail($penerimaan);
+
+        return view('moduls.Inventory.Penerimaan.PenerimaanBarang.faktur_penerimaan', compact('penerimaan'));
+    }
+
     private function listPoSiapTerima()
     {
         return Pemesanan::aktif()
@@ -177,7 +189,7 @@ class PenerimaanBarangController extends Controller
             'keterangan' => null,
         ], $request->validate([
             'pemesanan_id' => 'required|integer|exists:pemesanan,pemesanan_id',
-            'no_faktur' => 'nullable|string|max:50',
+            'no_faktur' => 'required|string|max:50',
             'tanggal_terima' => 'nullable|date',
             'keterangan' => 'nullable|string|max:255',
         ]));
